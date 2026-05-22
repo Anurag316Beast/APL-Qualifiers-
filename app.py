@@ -668,7 +668,7 @@ def chart_gauge(score: int, color: str) -> go.Figure:
                 "range": [300, 850],
                 "tickvals": [300, 450, 550, 650, 750, 850],
                 "tickfont": {"size": 8, "color": "#475569"},
-                "linecolor": "#2E323D", "tickcolor": "#2E323D",
+                "tickcolor": "#2E323D",
             },
             "bar":       {"color": color, "thickness": 0.22},
             "bgcolor":   "rgba(0,0,0,0)",

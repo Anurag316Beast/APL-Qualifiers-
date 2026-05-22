@@ -189,6 +189,9 @@ Development log for the Lucknow Artisan Credit Scoring System.
 - `score_meta()` returns `(label, css_class, hex_color)` so badge, chart color, and card accent all derive from one call.
 - Inner tabs in the left column keep the 60/40 layout stable while maximising the data surface area visible at once.
 
+### Bugfixes
+- **Gauge chart crash (`ValueError: Invalid property 'linecolor'`)** — `linecolor` is not a valid property on `plotly.graph_objs.indicator.gauge.Axis` (valid on XY axes, not indicator gauges). Removed from `chart_gauge()`.
+
 ### Next steps
 - [ ] Add `pytest` test suite for scoring math, router hard-gate logic, and parser extraction accuracy.
 - [ ] Expose `score_artisan` + `route_artisan` via a lightweight FastAPI layer.
