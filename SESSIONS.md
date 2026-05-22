@@ -105,3 +105,54 @@ Development log for the Lucknow Artisan Credit Scoring System.
 - [ ] Investigate ODOP Credit Line low match rate — likely a turnover-floor vs. cohort-distribution mismatch.
 
 ---
+
+## Session 4 — 2026-05-22
+
+**Goal:** Add a fully interactive, multilingual unstructured-data onboarding interface to the Streamlit dashboard — no external translation API.
+
+### Built
+
+**`language_parser.py`** (new module)
+- Regex + localized keyword parser for English, Hindi (हिन्दी), and Awadhi (अवधी) trade statements.
+- Extracts four structured fields from free-form dialect text:
+  - `cluster` — keyword lookup (`chowk` / `चौक`, `aminabad` / `अमिनाबाद`)
+  - `monthly_turnover` — number near monthly/महीने-का/महीनवा-मा-करीब patterns
+  - `payment_latency_days` — direct day patterns + month-word conversion (`दो`/`दुई` महीने → 60 days)
+  - `loan_amount` — loan-intent patterns + लाख expansion (1 लाख = ₹1,00,000)
+- Zero external dependencies; all three built-in sample texts parse correctly.
+
+**`app.py`** (extended)
+- Language selector radio (`English` / `Hindi (हिन्दी)` / `Awadhi (अवधी)`) added to sidebar.
+- Dashboard content moved into a `📊 Credit Dashboard` tab; new `🗣️ Smart Onboarding` tab added.
+- Onboarding tab features:
+  - Three one-click sample-template buttons that pre-fill the text area for live demos.
+  - Free-form text area accepting any of the three supported languages.
+  - Animated processing card (pulsing CSS dot) shown while parsing runs.
+  - **Left card — Extracted Trade Parameters:** cluster, monthly volume, payment latency, loan request — green if detected, grey-italic if missing.
+  - **Right card — Localized Agent Recommendation:** credit score + translated band badge, MUDRA/PM Vishwakarma scheme name in target language, confidence %, translated risk flags and eligibility gaps.
+  - Raw parser + router JSON expander for transparency.
+- `TRANSLATIONS` dict provides all UI strings in three languages (labels, placeholders, band names, scheme names).
+- `_t_flag` / `_t_gap` helpers post-translate predictable risk/gap strings; duplicate translated gaps deduplicated.
+- `_build_synthetic_profile()` converts parsed fields to a real `CreditProfile` and passes it to the existing `route_artisan()` — live scheme routing against the DB, no mocked output.
+
+### Extraction accuracy on built-in samples
+
+| Language | Cluster | Turnover | Latency | Loan |
+|----------|---------|----------|---------|------|
+| English | Chowk | ₹45K | 60 days | ₹80K |
+| Hindi (हिन्दी) | Chowk | ₹35K | 60 days | ₹1.00L |
+| Awadhi (अवधी) | Aminabad | ₹40K | 60 days | ₹50K |
+
+### Key decisions
+- Parser uses ordered rule lists with `(pattern, is_lakh_direct)` metadata so lakh expansion is applied before the ≥ ₹1,000 sanity check — prevents `1.0 < 1000` false-reject on "1 लाख" inputs.
+- Synthetic `CreditProfile` uses a latency → `(fast_rate, default_rate, CV)` lookup table so score estimates are deterministic and explainable without any ML model.
+- Language state lives in `st.session_state["interface_lang"]` via a sidebar radio; switching languages never causes a state crash because all UI strings are looked up from `TRANSLATIONS[lang]` at render time.
+
+### Next steps
+- [ ] Add `pytest` test suite for scoring math, router hard-gate logic, and parser extraction accuracy.
+- [ ] Expose `score_artisan` + `route_artisan` via a lightweight FastAPI layer.
+- [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
+- [ ] Extend parser to extract artisan name and craft type from unstructured text.
+- [ ] Add Gujarati / Bhojpuri dialect support as additional language options.
+
+---
