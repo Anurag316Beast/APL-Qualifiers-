@@ -5,6 +5,17 @@
 
 ---
 
+## Team Alpha Coders
+
+| Member Name | Role & Responsibility | GitHub Profile |
+| :--- | :--- | :--- |
+| **Radhika Pal** | Core Systems & Data Pipeline Engineer (Pandas/NumPy) | [Radhikaa2808](https://github.com/Radhikaa2808) |
+| **Suyash Verma** | Interface Architect & UI Overhaul Specialist (Streamlit/CSS) | [suyashverma0](https://github.com/suyashverma0) |
+| **Prakash Srivastava** | Linguistic Agent Logic & Integration Specialist (Language Parser/Auth) | [prakarsh-create](https://github.com/prakarsh-create) |
+| **Anurag Chaudhary** | Lead Underwriting Domain Architect & Documentation (Financial Schemes/PDF) | [Anurag316Beast](https://github.com/Anurag316Beast) |
+
+---
+
 ## Table of Contents
 
 1. [The Problem & Our Solution](#the-problem--our-solution)
