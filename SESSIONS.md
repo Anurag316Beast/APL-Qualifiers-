@@ -200,3 +200,48 @@ Development log for the Lucknow Artisan Credit Scoring System.
 - [ ] Add Gujarati / Bhojpuri dialect support as additional language options.
 
 ---
+## Session 6 — 2026-05-22
+
+**Goal:** Implement a secure, state-managed authentication system, multi-role dashboard routing, and an immutable audit logging system into `app.py`.
+
+### Built
+
+**`app.py`** (complete rewrite, ~1,750 lines)
+
+#### 1. Session State Authentication Core
+- Login screen rendered via `_render_login()` if `auth_authenticated` is absent from `st.session_state`. `st.stop()` blocks all app content until authenticated — no partial renders possible.
+- Passwords stored as `hashlib.sha256` hex digests in a hardcoded `USERS` config dict. No external OAuth library.
+- Two role credentials (both `password123`):
+  - `manager` → **Bank Underwriter** / `[Institutional Underwriter]` — full access to all tabs
+  - `assistant` → **Artisan Assistant / NGO Facilitator** / `[NGO Facilitator]` — Smart Onboarding tab only
+- Demo credential hint rendered below the form for judges.
+- Logout clears all `st.session_state` keys and calls `st.rerun()` — returns instantly to unauthenticated state with no rendering loops.
+
+#### 2. Multi-Role View Router
+- Sidebar shows an **account status banner** (display name + role tier) and a **Log Out** button for every authenticated session.
+- Role-aware tab creation:
+  - `manager` → 3 tabs: `📊 Credit Dashboard`, `🗣️ Smart Onboarding`, `🔒 Audit Logs`
+  - `assistant` → 1 tab: `🗣️ Smart Onboarding`
+- All dashboard and audit tab content additionally guarded by `if _is_manager:` so URL-pattern tricks cannot bypass the gate.
+- Artisan directory sidebar section only renders for manager role.
+
+#### 3. Immutable Audit Logging System
+- `audit_logs` table created idempotently in `artisan_credit.db` via `_init_audit_table()` on every authenticated load.
+- `_log_action()` appends rows with UTC ISO timestamps; wrapped in `try/except` so logging never crashes the app.
+- Three logged events: `CREDIT_SCORE_VIEWED` (per artisan switch), `STATEMENT_ANALYZED` (per analyze click), `UNDERWRITING_KIT_EXPORTED` (explicit download button).
+- **Audit Logs tab** (manager only): summary stat cards + immutable `st.dataframe` sorted newest-first.
+
+#### 4. CSS additions
+New classes: `.auth-wrap`, `.auth-banner`, `.auth-banner-tier`, `.perm-error`, `.audit-stat`.
+
+### Key decisions
+- Auth guard placed after DB guard — missing DB shows the appropriate error, not a login prompt.
+- `_load_audit_logs()` deliberately NOT decorated with `@st.cache_data` so the audit tab always reflects the latest rows.
+- `artisan_id` never assigned in the assistant path — all uses sit inside the same `if _is_manager:` guard, no `NameError` risk.
+
+### Next steps
+- [ ] Add `pytest` test suite for scoring math, router hard-gate logic, and parser extraction accuracy.
+- [ ] Expose `score_artisan` + `route_artisan` via a lightweight FastAPI layer.
+- [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
+- [ ] Extend parser to extract artisan name and craft type from unstructured text.
+- [ ] Add Gujarati / Bhojpuri dialect support as additional language options.

@@ -8,10 +8,12 @@ Requires: artisan_credit.db  (python3 main.py first)
 Packages: streamlit, plotly, pandas, numpy
 """
 
+import hashlib
 import json
 import os
 import re
 import sqlite3
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -294,12 +296,203 @@ html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
 .empty-title { font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.4rem; }
 .empty-sub   { font-size: 0.8rem; color: #374151; max-width: 360px; margin: 0 auto; line-height: 1.55; }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   AUTH — LOGIN PAGE
+───────────────────────────────────────────────────────────────────────── */
+.auth-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; padding: 3rem 1rem;
+}
+.auth-logo-row {
+    font-size: 2.4rem; font-weight: 900; color: #38BDF8;
+    letter-spacing: -0.04em; margin-bottom: 0.3rem; text-align: center;
+}
+.auth-title-row {
+    font-size: 1.15rem; font-weight: 700; color: #F1F5F9;
+    text-align: center; margin-bottom: 0.25rem;
+}
+.auth-sub-row {
+    font-size: 0.78rem; color: #475569; text-align: center; margin-bottom: 2rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   AUTH — SIDEBAR BANNER
+───────────────────────────────────────────────────────────────────────── */
+.auth-banner {
+    background: linear-gradient(135deg,rgba(56,189,248,0.10) 0%,rgba(56,189,248,0.03) 100%);
+    border: 1px solid rgba(56,189,248,0.22); border-radius: 10px;
+    padding: 0.85rem 1rem; margin-bottom: 0.6rem;
+}
+.auth-banner-name {
+    font-size: 0.9rem !important; font-weight: 700 !important;
+    color: #F1F5F9 !important; margin-bottom: 0.2rem;
+}
+.auth-banner-tier {
+    font-size: 0.62rem !important; font-weight: 700 !important;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #38BDF8 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PERMISSION ERROR STATE
+───────────────────────────────────────────────────────────────────────── */
+.perm-error {
+    text-align: center; padding: 4rem 2rem;
+    background: rgba(239,68,68,0.04);
+    border: 1px dashed rgba(239,68,68,0.22); border-radius: 14px;
+    margin: 1.5rem 0;
+}
+.perm-error-icon  { font-size: 2.4rem; color: #EF4444; margin-bottom: 0.8rem; }
+.perm-error-title { font-size: 1rem; font-weight: 700; color: #FCA5A5; margin-bottom: 0.45rem; }
+.perm-error-sub   {
+    font-size: 0.82rem; color: #7F1D1D; max-width: 400px;
+    margin: 0 auto; line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   AUDIT LOG
+───────────────────────────────────────────────────────────────────────── */
+.audit-stat {
+    background: #1A1D24; border: 1px solid #2E323D;
+    border-radius: 10px; padding: 1rem 1.2rem; text-align: center;
+}
+.audit-stat-val {
+    font-size: 1.8rem; font-weight: 900; color: #38BDF8;
+    line-height: 1; letter-spacing: -0.03em;
+}
+.audit-stat-lbl {
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #475569; margin-top: 0.3rem;
+}
+
 /* ── Hide Streamlit chrome ───────────────────────────────────────── */
 #MainMenu { visibility: hidden; }
 footer     { visibility: hidden; }
 header     { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Authentication config
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _hash(pw: str) -> str:
+    return hashlib.sha256(pw.encode("utf-8")).hexdigest()
+
+
+USERS: dict[str, dict] = {
+    "manager": {
+        "password_hash": _hash("password123"),
+        "display_name":  "Credit Manager",
+        "role":          "Bank Underwriter",
+        "role_tier":     "Institutional Underwriter",
+        "is_manager":    True,
+    },
+    "assistant": {
+        "password_hash": _hash("password123"),
+        "display_name":  "Field Assistant",
+        "role":          "Artisan Assistant / NGO Facilitator",
+        "role_tier":     "NGO Facilitator",
+        "is_manager":    False,
+    },
+}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Audit logging
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _init_audit_table() -> None:
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp      TEXT    NOT NULL,
+            username       TEXT    NOT NULL,
+            action         TEXT    NOT NULL,
+            artisan_target TEXT,
+            result_status  TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def _log_action(username: str, action: str, artisan_target: str, result_status: str) -> None:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute(
+            "INSERT INTO audit_logs (timestamp, username, action, artisan_target, result_status) "
+            "VALUES (?,?,?,?,?)",
+            (datetime.now(timezone.utc).isoformat(timespec="seconds"),
+             username, action, artisan_target, result_status),
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
+def _load_audit_logs() -> pd.DataFrame:
+    conn = sqlite3.connect(DB_PATH)
+    df   = pd.read_sql(
+        "SELECT timestamp, username, action, artisan_target, result_status "
+        "FROM audit_logs ORDER BY id DESC",
+        conn,
+    )
+    conn.close()
+    return df
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Login page
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _render_login() -> None:
+    _, center, _ = st.columns([1, 1.1, 1])
+    with center:
+        st.markdown("""
+        <div class='auth-wrap'>
+            <div class='auth-logo-row'>⬡ Artisan Credit</div>
+            <div class='auth-title-row'>Secure Financial Intelligence Portal</div>
+            <div class='auth-sub-row'>Lucknow Textile Cluster &nbsp;·&nbsp; Alternative Credit System</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.session_state.get("_login_error"):
+            st.error("Invalid credentials — please check your username and password.")
+
+        with st.form("login_form", clear_on_submit=False):
+            username  = st.text_input("Username", placeholder="e.g. manager")
+            password  = st.text_input("Password", type="password", placeholder="Enter your password")
+            submitted = st.form_submit_button(
+                "Sign In  →", use_container_width=True, type="primary",
+            )
+
+        if submitted:
+            user = USERS.get(username)
+            if user and user["password_hash"] == _hash(password):
+                st.session_state["auth_authenticated"] = True
+                st.session_state["auth_username"]      = username
+                st.session_state["auth_display_name"]  = user["display_name"]
+                st.session_state["auth_role"]          = user["role"]
+                st.session_state["auth_role_tier"]     = user["role_tier"]
+                st.session_state["auth_is_manager"]    = user["is_manager"]
+                st.session_state.pop("_login_error", None)
+                st.rerun()
+            else:
+                st.session_state["_login_error"] = True
+                st.rerun()
+
+        st.markdown(
+            "<div style='text-align:center;margin-top:1.2rem;"
+            "font-size:0.72rem;color:#374151'>"
+            "Demo credentials — Bank Underwriter: <code>manager</code> &nbsp;|&nbsp; "
+            "NGO Facilitator: <code>assistant</code> &nbsp;(password: <code>password123</code>)"
+            "</div>",
+            unsafe_allow_html=True,
+        )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -806,12 +999,42 @@ if not os.path.exists(DB_PATH):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Sidebar — language + artisan selector
+# Auth guard — show login page if not authenticated
 # ──────────────────────────────────────────────────────────────────────────────
 
-all_artisans = load_artisan_list()
+if not st.session_state.get("auth_authenticated"):
+    _render_login()
+    st.stop()
+
+# Session is authenticated — pull identity from state
+_init_audit_table()
+_username     = st.session_state["auth_username"]
+_display_name = st.session_state["auth_display_name"]
+_role_tier    = st.session_state["auth_role_tier"]
+_is_manager   = st.session_state["auth_is_manager"]
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Sidebar — auth banner + language + artisan selector (manager only)
+# ──────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
+    # ── Account status banner ─────────────────────────────────────────────────
+    st.markdown(
+        f"""<div class='auth-banner'>
+        <div class='auth-banner-name'>{_display_name}</div>
+        <div class='auth-banner-tier'>[{_role_tier}]</div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+
+    if st.button("Log Out", key="logout_btn", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+
+    st.divider()
+
     lang = st.radio(
         "Language / भाषा",
         ["English", "Hindi (हिन्दी)", "Awadhi (अवधी)"],
@@ -820,478 +1043,497 @@ with st.sidebar:
     )
     tr = TRANSLATIONS[lang]
 
-    st.divider()
-    st.markdown("## Artisan Directory")
-    st.caption(f"{len(all_artisans)} artisans · Lucknow")
+    if _is_manager:
+        st.divider()
+        st.markdown("## Artisan Directory")
+        all_artisans = load_artisan_list()
+        st.caption(f"{len(all_artisans)} artisans · Lucknow")
 
-    search      = st.text_input("", placeholder="Search by name…",
-                                label_visibility="collapsed")
-    cluster_opt = st.radio("Cluster", ["All", "Chowk", "Aminabad"], horizontal=True)
+        search      = st.text_input("", placeholder="Search by name…",
+                                    label_visibility="collapsed")
+        cluster_opt = st.radio("Cluster", ["All", "Chowk", "Aminabad"], horizontal=True)
 
-    view = all_artisans.copy()
-    if search:
-        view = view[view["name"].str.contains(search, case=False, na=False)]
-    if cluster_opt != "All":
-        view = view[view["cluster"] == cluster_opt]
+        view = all_artisans.copy()
+        if search:
+            view = view[view["name"].str.contains(search, case=False, na=False)]
+        if cluster_opt != "All":
+            view = view[view["cluster"] == cluster_opt]
 
-    if view.empty:
-        st.warning("No artisans match this filter.")
-        st.stop()
+        if view.empty:
+            st.warning("No artisans match this filter.")
+            st.stop()
 
-    view        = view.copy()
-    view["label"] = view.apply(
-        lambda r: f"{r['name']}  ·  {r['cluster']}  ·  {r['craft_type']}", axis=1
-    )
-    chosen_label = st.selectbox("", options=view["label"].tolist(),
-                                label_visibility="collapsed")
-    chosen_row   = view[view["label"] == chosen_label].iloc[0]
-    artisan_id   = int(chosen_row["id"])
+        view        = view.copy()
+        view["label"] = view.apply(
+            lambda r: f"{r['name']}  ·  {r['cluster']}  ·  {r['craft_type']}", axis=1
+        )
+        chosen_label = st.selectbox("", options=view["label"].tolist(),
+                                    label_visibility="collapsed")
+        chosen_row   = view[view["label"] == chosen_label].iloc[0]
+        artisan_id   = int(chosen_row["id"])
 
-    st.divider()
-    st.markdown(f"**{chosen_row['name']}**")
-    st.markdown(
-        f"<span style='font-size:0.78rem;color:#64748B'>"
-        f"{chosen_row['cluster']} · {chosen_row['craft_type']}</span>",
-        unsafe_allow_html=True,
-    )
-    st.metric("Annual Turnover", fmt_inr(float(chosen_row["annual_turnover"])))
-    st.metric("Card Status",     chosen_row["artisan_card_status"])
+        st.divider()
+        st.markdown(f"**{chosen_row['name']}**")
+        st.markdown(
+            f"<span style='font-size:0.78rem;color:#64748B'>"
+            f"{chosen_row['cluster']} · {chosen_row['craft_type']}</span>",
+            unsafe_allow_html=True,
+        )
+        st.metric("Annual Turnover", fmt_inr(float(chosen_row["annual_turnover"])))
+        st.metric("Card Status",     chosen_row["artisan_card_status"])
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Main tab bar
+# Main tab bar — role-aware
 # ──────────────────────────────────────────────────────────────────────────────
 
-tab_dash, tab_onboard = st.tabs([tr["dashboard_tab"], tr["onboarding_tab"]])
+if _is_manager:
+    tab_dash, tab_onboard, tab_audit = st.tabs([
+        tr["dashboard_tab"],
+        tr["onboarding_tab"],
+        "🔒 Audit Logs",
+    ])
+else:
+    _tab_list  = st.tabs([tr["onboarding_tab"]])
+    tab_onboard = _tab_list[0]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  TAB 1 — CREDIT DASHBOARD
+#  TAB 1 — CREDIT DASHBOARD  (Bank Underwriter only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-with tab_dash:
-    profile   = load_profile(artisan_id)
-    routing   = load_routing(artisan_id)
-    invoices  = load_invoices(artisan_id)
-    ledger    = load_ledger(artisan_id)
+if _is_manager:
+    with tab_dash:
+        profile   = load_profile(artisan_id)
+        routing   = load_routing(artisan_id)
+        invoices  = load_invoices(artisan_id)
+        ledger    = load_ledger(artisan_id)
 
-    band_label, band_css, band_color = score_meta(profile.credit_score)
+        # Audit: log once per artisan viewed per session
+        _last_logged = st.session_state.get("_audit_last_artisan")
+        if _last_logged != artisan_id:
+            _log_action(
+                _username, "CREDIT_SCORE_VIEWED",
+                profile.name, f"Score:{profile.credit_score}",
+            )
+            st.session_state["_audit_last_artisan"] = artisan_id
 
-    rec_scheme = routing.get("recommended_scheme")
-    loan_amt   = float(routing.get("max_eligible_loan_amount", 0.0))
-    confidence = float(routing.get("confidence_score", 0.0))
-    alts       = routing.get("alternative_schemes", [])
-    flags      = routing.get("risk_flags", [])
-    missing    = routing.get("missing_parameters", [])
+        band_label, band_css, band_color = score_meta(profile.credit_score)
 
-    # ── Header bar ────────────────────────────────────────────────────────────
-    st.markdown(
-        f"""<div class='dash-header'>
-        <div>
-          <div class='dash-header-name'>{profile.name}</div>
-          <div class='dash-header-sub'>
-            {profile.craft_type}&nbsp;·&nbsp;{profile.cluster} Cluster
-            &nbsp;·&nbsp;{profile.years_active} yrs active
-            &nbsp;·&nbsp;Card:&nbsp;{profile.artisan_card_status}
-          </div>
-        </div>
-        <div class='dash-header-right'>
-          <span class='risk-badge {band_css}'>{band_label}</span>
-          <span style='font-size:0.7rem;color:#374151'>ID&nbsp;#{profile.artisan_id:04d}</span>
-        </div>
-        </div>""",
-        unsafe_allow_html=True,
-    )
+        rec_scheme = routing.get("recommended_scheme")
+        loan_amt   = float(routing.get("max_eligible_loan_amount", 0.0))
+        confidence = float(routing.get("confidence_score", 0.0))
+        alts       = routing.get("alternative_schemes", [])
+        flags      = routing.get("risk_flags", [])
+        missing    = routing.get("missing_parameters", [])
 
-    # ── Executive Summary Matrix ───────────────────────────────────────────────
-    em1, em2, em3, em4 = st.columns(4, gap="small")
-
-    with em1:
+        # ── Header bar ────────────────────────────────────────────────────────
         st.markdown(
-            f"""<div class='exec-metric'>
-            <div class='em-label'>Alternative Credit Score</div>
-            <div class='em-value' style='color:{band_color}'>{profile.credit_score}</div>
-            <div class='em-sub'>Range 300–850 &nbsp;·&nbsp; CIBIL-aligned</div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
-    with em2:
-        st.markdown(
-            f"""<div class='exec-metric'>
-            <div class='em-label'>Algorithmic Confidence</div>
-            <div class='em-value' style='color:#38BDF8'>{confidence:.0%}</div>
-            <div class='em-sub'>{profile.total_invoices} invoices&nbsp;·&nbsp;{profile.unique_buyers} buyers</div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
-    with em3:
-        cap_value = fmt_inr(loan_amt) if loan_amt > 0 else "—"
-        cap_sub   = rec_scheme or "No scheme matched"
-        st.markdown(
-            f"""<div class='exec-metric'>
-            <div class='em-label'>Recommended Capital Ceiling</div>
-            <div class='em-value' style='color:#10B981'>{cap_value}</div>
-            <div class='em-sub'>{cap_sub}</div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
-    with em4:
-        st.markdown(
-            f"""<div class='exec-metric'>
-            <div class='em-label'>Prompt Settlement Rate</div>
-            <div class='em-value' style='color:#F59E0B'>{profile.fast_payment_rate:.0%}</div>
-            <div class='em-sub'>Invoices cleared within 45 days</div>
+            f"""<div class='dash-header'>
+            <div>
+              <div class='dash-header-name'>{profile.name}</div>
+              <div class='dash-header-sub'>
+                {profile.craft_type}&nbsp;·&nbsp;{profile.cluster} Cluster
+                &nbsp;·&nbsp;{profile.years_active} yrs active
+                &nbsp;·&nbsp;Card:&nbsp;{profile.artisan_card_status}
+              </div>
+            </div>
+            <div class='dash-header-right'>
+              <span class='risk-badge {band_css}'>{band_label}</span>
+              <span style='font-size:0.7rem;color:#374151'>ID&nbsp;#{profile.artisan_id:04d}</span>
+            </div>
             </div>""",
             unsafe_allow_html=True,
         )
 
-    st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+        # ── Executive Summary Matrix ──────────────────────────────────────────
+        em1, em2, em3, em4 = st.columns(4, gap="small")
 
-    # ── 60 / 40 split ─────────────────────────────────────────────────────────
-    left_col, right_col = st.columns([3, 2], gap="large")
-
-    # ┌─────────────────────────────────────────────────────────────────────────
-    # │  LEFT COLUMN — Data Dossier with 3 inner tabs
-    # └─────────────────────────────────────────────────────────────────────────
-    with left_col:
-        itab1, itab2, itab3 = st.tabs([
-            "📊 Multilingual Parser",
-            "📈 Invoicing Timeline",
-            "🗃️ Ledger SQL Logs",
-        ])
-
-        # ── Inner Tab 1: Score Signal Analysis ────────────────────────────────
-        with itab1:
-            g_col, s_col = st.columns([1, 1.35], gap="medium")
-
-            with g_col:
-                st.markdown("<div class='section-header'>Credit Score</div>",
-                            unsafe_allow_html=True)
-                st.plotly_chart(chart_gauge(profile.credit_score, band_color),
-                                use_container_width=True,
-                                config={"displayModeBar": False})
-                st.markdown(
-                    f"<div style='text-align:center;margin-top:-0.6rem'>"
-                    f"<span class='risk-badge {band_css}'>{band_label}</span></div>",
-                    unsafe_allow_html=True,
-                )
-
-            with s_col:
-                st.markdown("<div class='section-header'>Score Breakdown</div>",
-                            unsafe_allow_html=True)
-                st.plotly_chart(chart_subscores(profile),
-                                use_container_width=True,
-                                config={"displayModeBar": False})
-                st.caption(
-                    f"Composite: **{profile.composite_raw:.1f} / 100**  "
-                    f"→ Final score: **{profile.credit_score}** "
-                    f"(300 + {profile.composite_raw:.1f}% × 550)"
-                )
-
-            st.markdown("<div style='height:0.25rem'></div>", unsafe_allow_html=True)
+        with em1:
             st.markdown(
-                "<div class='section-header'>Alternative Data Signal Decomposition</div>",
-                unsafe_allow_html=True,
-            )
-
-            sc1, sc2, sc3 = st.columns(3, gap="small")
-
-            # Cash Flow signal
-            cf_grade = "STABLE" if profile.revenue_cv_adjusted < 0.30 else (
-                       "VOLATILE" if profile.revenue_cv_adjusted > 0.60 else "MODERATE")
-            cf_g_clr = ("#10B981" if profile.revenue_cv_adjusted < 0.30 else
-                        "#EF4444" if profile.revenue_cv_adjusted > 0.60 else "#F59E0B")
-            with sc1:
-                st.markdown(
-                    f"""<div class='signal-card'>
-                    <div class='signal-label'>Cash Flow Signal</div>
-                    <div class='signal-score' style='color:#818CF8'>
-                        {profile.cashflow_score:.1f}
-                        <span class='signal-denom'>/100</span>
-                    </div>
-                    <div class='signal-weight'>Weight 30% &nbsp;·&nbsp; S_CF</div>
-                    <div class='signal-kv'>
-                        <span>CV<sub>adj</sub></span>
-                        <span class='signal-kv-val'>{profile.revenue_cv_adjusted:.3f}</span>
-                    </div>
-                    <div class='signal-kv'>
-                        <span>Avg Monthly</span>
-                        <span class='signal-kv-val'>{fmt_inr(profile.avg_monthly_revenue)}</span>
-                    </div>
-                    <div class='signal-kv'>
-                        <span>Volatility</span>
-                        <span class='sig-grade' style='color:{cf_g_clr}'>{cf_grade}</span>
-                    </div>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-
-            # Fulfillment signal
-            ff_grade = ("EXCELLENT" if profile.fast_payment_rate >= 0.80 else
-                        "POOR" if profile.fast_payment_rate < 0.40 else "FAIR")
-            ff_g_clr = ("#10B981" if profile.fast_payment_rate >= 0.80 else
-                        "#EF4444" if profile.fast_payment_rate < 0.40 else "#F59E0B")
-            with sc2:
-                st.markdown(
-                    f"""<div class='signal-card'>
-                    <div class='signal-label'>Fulfillment Signal</div>
-                    <div class='signal-score' style='color:#10B981'>
-                        {profile.fulfillment_score:.1f}
-                        <span class='signal-denom'>/100</span>
-                    </div>
-                    <div class='signal-weight'>Weight 40% &nbsp;·&nbsp; S_FF</div>
-                    <div class='signal-kv'>
-                        <span>Fast Rate</span>
-                        <span class='signal-kv-val'>{profile.fast_payment_rate:.0%}</span>
-                    </div>
-                    <div class='signal-kv'>
-                        <span>Default Rate</span>
-                        <span class='signal-kv-val'>{profile.severe_default_rate:.0%}</span>
-                    </div>
-                    <div class='signal-kv'>
-                        <span>Settlement</span>
-                        <span class='sig-grade' style='color:{ff_g_clr}'>{ff_grade}</span>
-                    </div>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-
-            # Relationship signal
-            rel_grade = ("STRONG"   if profile.repeat_buyer_rate >= 0.70 else
-                         "WEAK"     if profile.repeat_buyer_rate < 0.30 else "MODERATE")
-            rel_g_clr = ("#10B981" if profile.repeat_buyer_rate >= 0.70 else
-                         "#EF4444" if profile.repeat_buyer_rate < 0.30 else "#38BDF8")
-            with sc3:
-                st.markdown(
-                    f"""<div class='signal-card'>
-                    <div class='signal-label'>Relationship Signal</div>
-                    <div class='signal-score' style='color:#38BDF8'>
-                        {profile.relationship_score:.1f}
-                        <span class='signal-denom'>/100</span>
-                    </div>
-                    <div class='signal-weight'>Weight 30% &nbsp;·&nbsp; S_REL</div>
-                    <div class='signal-kv'>
-                        <span>Repeat Buyers</span>
-                        <span class='signal-kv-val'>{profile.repeat_buyer_rate:.0%}</span>
-                    </div>
-                    <div class='signal-kv'>
-                        <span>Unique Partners</span>
-                        <span class='signal-kv-val'>{profile.unique_buyers}</span>
-                    </div>
-                    <div class='signal-kv'>
-                        <span>Network</span>
-                        <span class='sig-grade' style='color:{rel_g_clr}'>{rel_grade}</span>
-                    </div>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-
-        # ── Inner Tab 2: Invoicing Timeline ───────────────────────────────────
-        with itab2:
-            st.markdown(
-                "<div class='section-header'>Monthly Revenue Consistency</div>",
-                unsafe_allow_html=True,
-            )
-            if not invoices.empty:
-                st.plotly_chart(chart_revenue(invoices), use_container_width=True,
-                                config={"displayModeBar": False})
-                st.caption(
-                    f"Seasonality-adjusted CV: **{profile.revenue_cv_adjusted:.3f}** — "
-                    "dashed line strips expected seasonal cycles to isolate genuine volatility."
-                )
-            else:
-                st.markdown(
-                    "<div class='empty-state'>"
-                    "<div class='empty-icon'>◈</div>"
-                    "<div class='empty-title'>No Invoice Data</div>"
-                    "<div class='empty-sub'>No GST invoices found for this artisan.</div>"
-                    "</div>",
-                    unsafe_allow_html=True,
-                )
-
-            st.markdown(
-                "<div class='section-header' style='margin-top:0.75rem'>"
-                "Invoice Payment Latency Distribution</div>",
-                unsafe_allow_html=True,
-            )
-            if not invoices.empty:
-                st.plotly_chart(chart_latency(invoices), use_container_width=True,
-                                config={"displayModeBar": False})
-                st.caption(
-                    f"{profile.total_invoices} invoices &nbsp;·&nbsp; "
-                    f"{profile.fast_payment_rate:.0%} within 45 d &nbsp;·&nbsp; "
-                    f"{profile.severe_default_rate:.0%} severe defaults (>90 d)"
-                )
-
-        # ── Inner Tab 3: Ledger SQL Logs ──────────────────────────────────────
-        with itab3:
-            st.markdown(
-                "<div class='section-header'>GST Invoice History</div>",
-                unsafe_allow_html=True,
-            )
-            if not invoices.empty:
-                d = invoices.copy()
-                d["invoice_date"]  = d["invoice_date"].dt.strftime("%d %b %Y")
-                d["invoice_value"] = d["invoice_value"].apply(fmt_inr)
-                d["tax_paid"]      = d["tax_paid"].apply(fmt_inr)
-                d.columns = ["Date", "Buyer", "Invoice Value", "Tax Paid",
-                             "Status", "Delay (d)"]
-                st.dataframe(
-                    d.head(30), use_container_width=True, hide_index=True,
-                    column_config={"Delay (d)": st.column_config.NumberColumn(
-                        "Delay (d)", format="%d d")},
-                )
-                st.caption(f"{len(invoices)} total invoices · showing most recent 30")
-            else:
-                st.info("No invoice data on record.")
-
-            st.markdown(
-                "<div class='section-header' style='margin-top:0.9rem'>"
-                "Digital Khata · Order Ledger</div>",
-                unsafe_allow_html=True,
-            )
-            if not ledger.empty:
-                d = ledger.copy()
-                d["order_value"]     = d["order_value"].apply(fmt_inr)
-                d["is_repeat_buyer"] = d["is_repeat_buyer"].map({1: "Yes", 0: "No"})
-                d.columns = ["Buyer", "Order Date", "Delivery Date", "Settlement Date",
-                             "Order Value", "Settlement (d)", "Repeat"]
-                st.dataframe(
-                    d.head(30), use_container_width=True, hide_index=True,
-                    column_config={"Settlement (d)": st.column_config.NumberColumn(
-                        "Settlement (d)", format="%d d")},
-                )
-                st.caption(f"{len(ledger)} total entries · showing most recent 30")
-            else:
-                st.info("No ledger data on record.")
-
-    # ┌─────────────────────────────────────────────────────────────────────────
-    # │  RIGHT COLUMN — Credit Underwriting Suite
-    # └─────────────────────────────────────────────────────────────────────────
-    with right_col:
-        st.markdown(
-            "<div class='section-header'>Underwriting Decision</div>",
-            unsafe_allow_html=True,
-        )
-
-        # ── Scheme recommendation card ────────────────────────────────────────
-        if rec_scheme:
-            st.markdown(
-                f"""<div class='scheme-block'>
-                <div style='font-size:0.6rem;font-weight:700;letter-spacing:0.13em;
-                            text-transform:uppercase;color:#34D399;margin-bottom:0.4rem'>
-                    Recommended Scheme</div>
-                <div style='font-size:1.05rem;font-weight:700;color:#D1FAE5;
-                            margin-bottom:0.15rem'>{rec_scheme}</div>
-                <div class='scheme-amount'>{fmt_inr(loan_amt)}</div>
-                <div style='font-size:0.7rem;color:#6EE7B7;margin-top:0.18rem'>
-                    Maximum Capital Ceiling</div>
+                f"""<div class='exec-metric'>
+                <div class='em-label'>Alternative Credit Score</div>
+                <div class='em-value' style='color:{band_color}'>{profile.credit_score}</div>
+                <div class='em-sub'>Range 300–850 &nbsp;·&nbsp; CIBIL-aligned</div>
                 </div>""",
                 unsafe_allow_html=True,
             )
-        else:
+        with em2:
             st.markdown(
-                """<div style='background:rgba(239,68,68,0.07);
-                              border:1px solid rgba(239,68,68,0.22);
-                              border-radius:12px;padding:1.1rem 1.4rem'>
-                <div style='font-size:0.88rem;color:#FCA5A5;font-weight:600'>
-                    No Eligible Scheme Identified</div>
-                <div style='font-size:0.75rem;color:#7F1D1D;margin-top:0.3rem'>
-                    Review eligibility gaps below</div>
+                f"""<div class='exec-metric'>
+                <div class='em-label'>Algorithmic Confidence</div>
+                <div class='em-value' style='color:#38BDF8'>{confidence:.0%}</div>
+                <div class='em-sub'>{profile.total_invoices} invoices&nbsp;·&nbsp;{profile.unique_buyers} buyers</div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+        with em3:
+            cap_value = fmt_inr(loan_amt) if loan_amt > 0 else "—"
+            cap_sub   = rec_scheme or "No scheme matched"
+            st.markdown(
+                f"""<div class='exec-metric'>
+                <div class='em-label'>Recommended Capital Ceiling</div>
+                <div class='em-value' style='color:#10B981'>{cap_value}</div>
+                <div class='em-sub'>{cap_sub}</div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+        with em4:
+            st.markdown(
+                f"""<div class='exec-metric'>
+                <div class='em-label'>Prompt Settlement Rate</div>
+                <div class='em-value' style='color:#F59E0B'>{profile.fast_payment_rate:.0%}</div>
+                <div class='em-sub'>Invoices cleared within 45 days</div>
                 </div>""",
                 unsafe_allow_html=True,
             )
 
-        st.markdown("<div style='height:0.55rem'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
 
-        # ── Confidence meter ──────────────────────────────────────────────────
-        st.markdown(
-            "<div style='font-size:0.6rem;font-weight:700;letter-spacing:0.13em;"
-            "text-transform:uppercase;color:#475569;margin-bottom:0.35rem'>"
-            "Match Confidence</div>",
-            unsafe_allow_html=True,
-        )
-        st.progress(confidence, text=f"{confidence:.0%}")
+        # ── 60 / 40 split ─────────────────────────────────────────────────────
+        left_col, right_col = st.columns([3, 2], gap="large")
 
-        # ── Underwriting inputs ───────────────────────────────────────────────
-        st.markdown(
-            f"""<div style='margin-top:0.6rem'>
-            <div class='underwrite-kv'>
-              <span class='underwrite-kv-key'>Invoices Reviewed</span>
-              <span class='underwrite-kv-val'>{profile.total_invoices}</span>
-            </div>
-            <div class='underwrite-kv'>
-              <span class='underwrite-kv-key'>Unique Trade Partners</span>
-              <span class='underwrite-kv-val'>{profile.unique_buyers}</span>
-            </div>
-            <div class='underwrite-kv'>
-              <span class='underwrite-kv-key'>Years Active</span>
-              <span class='underwrite-kv-val'>{profile.years_active}</span>
-            </div>
-            <div class='underwrite-kv'>
-              <span class='underwrite-kv-key'>Annual Turnover</span>
-              <span class='underwrite-kv-val'>{fmt_inr(profile.annual_turnover)}</span>
-            </div>
-            <div class='underwrite-kv' style='border-bottom:none'>
-              <span class='underwrite-kv-key'>Severe Default Rate</span>
-              <span class='underwrite-kv-val'
-                style='color:{"#EF4444" if profile.severe_default_rate > 0.15 else "#10B981"}'>
-                {profile.severe_default_rate:.0%}</span>
-            </div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+        with left_col:
+            itab1, itab2, itab3 = st.tabs([
+                "📊 Multilingual Parser",
+                "📈 Invoicing Timeline",
+                "🗃️ Ledger SQL Logs",
+            ])
 
-        # ── Alternative schemes ───────────────────────────────────────────────
-        if alts:
+            # ── Inner Tab 1: Score Signal Analysis ────────────────────────────
+            with itab1:
+                g_col, s_col = st.columns([1, 1.35], gap="medium")
+
+                with g_col:
+                    st.markdown("<div class='section-header'>Credit Score</div>",
+                                unsafe_allow_html=True)
+                    st.plotly_chart(chart_gauge(profile.credit_score, band_color),
+                                    use_container_width=True,
+                                    config={"displayModeBar": False})
+                    st.markdown(
+                        f"<div style='text-align:center;margin-top:-0.6rem'>"
+                        f"<span class='risk-badge {band_css}'>{band_label}</span></div>",
+                        unsafe_allow_html=True,
+                    )
+
+                with s_col:
+                    st.markdown("<div class='section-header'>Score Breakdown</div>",
+                                unsafe_allow_html=True)
+                    st.plotly_chart(chart_subscores(profile),
+                                    use_container_width=True,
+                                    config={"displayModeBar": False})
+                    st.caption(
+                        f"Composite: **{profile.composite_raw:.1f} / 100**  "
+                        f"→ Final score: **{profile.credit_score}** "
+                        f"(300 + {profile.composite_raw:.1f}% × 550)"
+                    )
+
+                st.markdown("<div style='height:0.25rem'></div>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div class='section-header'>Alternative Data Signal Decomposition</div>",
+                    unsafe_allow_html=True,
+                )
+
+                sc1, sc2, sc3 = st.columns(3, gap="small")
+
+                cf_grade = "STABLE" if profile.revenue_cv_adjusted < 0.30 else (
+                           "VOLATILE" if profile.revenue_cv_adjusted > 0.60 else "MODERATE")
+                cf_g_clr = ("#10B981" if profile.revenue_cv_adjusted < 0.30 else
+                            "#EF4444" if profile.revenue_cv_adjusted > 0.60 else "#F59E0B")
+                with sc1:
+                    st.markdown(
+                        f"""<div class='signal-card'>
+                        <div class='signal-label'>Cash Flow Signal</div>
+                        <div class='signal-score' style='color:#818CF8'>
+                            {profile.cashflow_score:.1f}
+                            <span class='signal-denom'>/100</span>
+                        </div>
+                        <div class='signal-weight'>Weight 30% &nbsp;·&nbsp; S_CF</div>
+                        <div class='signal-kv'>
+                            <span>CV<sub>adj</sub></span>
+                            <span class='signal-kv-val'>{profile.revenue_cv_adjusted:.3f}</span>
+                        </div>
+                        <div class='signal-kv'>
+                            <span>Avg Monthly</span>
+                            <span class='signal-kv-val'>{fmt_inr(profile.avg_monthly_revenue)}</span>
+                        </div>
+                        <div class='signal-kv'>
+                            <span>Volatility</span>
+                            <span class='sig-grade' style='color:{cf_g_clr}'>{cf_grade}</span>
+                        </div>
+                        </div>""",
+                        unsafe_allow_html=True,
+                    )
+
+                ff_grade = ("EXCELLENT" if profile.fast_payment_rate >= 0.80 else
+                            "POOR" if profile.fast_payment_rate < 0.40 else "FAIR")
+                ff_g_clr = ("#10B981" if profile.fast_payment_rate >= 0.80 else
+                            "#EF4444" if profile.fast_payment_rate < 0.40 else "#F59E0B")
+                with sc2:
+                    st.markdown(
+                        f"""<div class='signal-card'>
+                        <div class='signal-label'>Fulfillment Signal</div>
+                        <div class='signal-score' style='color:#10B981'>
+                            {profile.fulfillment_score:.1f}
+                            <span class='signal-denom'>/100</span>
+                        </div>
+                        <div class='signal-weight'>Weight 40% &nbsp;·&nbsp; S_FF</div>
+                        <div class='signal-kv'>
+                            <span>Fast Rate</span>
+                            <span class='signal-kv-val'>{profile.fast_payment_rate:.0%}</span>
+                        </div>
+                        <div class='signal-kv'>
+                            <span>Default Rate</span>
+                            <span class='signal-kv-val'>{profile.severe_default_rate:.0%}</span>
+                        </div>
+                        <div class='signal-kv'>
+                            <span>Settlement</span>
+                            <span class='sig-grade' style='color:{ff_g_clr}'>{ff_grade}</span>
+                        </div>
+                        </div>""",
+                        unsafe_allow_html=True,
+                    )
+
+                rel_grade = ("STRONG"   if profile.repeat_buyer_rate >= 0.70 else
+                             "WEAK"     if profile.repeat_buyer_rate < 0.30 else "MODERATE")
+                rel_g_clr = ("#10B981" if profile.repeat_buyer_rate >= 0.70 else
+                             "#EF4444" if profile.repeat_buyer_rate < 0.30 else "#38BDF8")
+                with sc3:
+                    st.markdown(
+                        f"""<div class='signal-card'>
+                        <div class='signal-label'>Relationship Signal</div>
+                        <div class='signal-score' style='color:#38BDF8'>
+                            {profile.relationship_score:.1f}
+                            <span class='signal-denom'>/100</span>
+                        </div>
+                        <div class='signal-weight'>Weight 30% &nbsp;·&nbsp; S_REL</div>
+                        <div class='signal-kv'>
+                            <span>Repeat Buyers</span>
+                            <span class='signal-kv-val'>{profile.repeat_buyer_rate:.0%}</span>
+                        </div>
+                        <div class='signal-kv'>
+                            <span>Unique Partners</span>
+                            <span class='signal-kv-val'>{profile.unique_buyers}</span>
+                        </div>
+                        <div class='signal-kv'>
+                            <span>Network</span>
+                            <span class='sig-grade' style='color:{rel_g_clr}'>{rel_grade}</span>
+                        </div>
+                        </div>""",
+                        unsafe_allow_html=True,
+                    )
+
+            # ── Inner Tab 2: Invoicing Timeline ──────────────────────────────
+            with itab2:
+                st.markdown(
+                    "<div class='section-header'>Monthly Revenue Consistency</div>",
+                    unsafe_allow_html=True,
+                )
+                if not invoices.empty:
+                    st.plotly_chart(chart_revenue(invoices), use_container_width=True,
+                                    config={"displayModeBar": False})
+                    st.caption(
+                        f"Seasonality-adjusted CV: **{profile.revenue_cv_adjusted:.3f}** — "
+                        "dashed line strips expected seasonal cycles to isolate genuine volatility."
+                    )
+                else:
+                    st.markdown(
+                        "<div class='empty-state'>"
+                        "<div class='empty-icon'>◈</div>"
+                        "<div class='empty-title'>No Invoice Data</div>"
+                        "<div class='empty-sub'>No GST invoices found for this artisan.</div>"
+                        "</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                st.markdown(
+                    "<div class='section-header' style='margin-top:0.75rem'>"
+                    "Invoice Payment Latency Distribution</div>",
+                    unsafe_allow_html=True,
+                )
+                if not invoices.empty:
+                    st.plotly_chart(chart_latency(invoices), use_container_width=True,
+                                    config={"displayModeBar": False})
+                    st.caption(
+                        f"{profile.total_invoices} invoices &nbsp;·&nbsp; "
+                        f"{profile.fast_payment_rate:.0%} within 45 d &nbsp;·&nbsp; "
+                        f"{profile.severe_default_rate:.0%} severe defaults (>90 d)"
+                    )
+
+            # ── Inner Tab 3: Ledger SQL Logs ──────────────────────────────────
+            with itab3:
+                st.markdown(
+                    "<div class='section-header'>GST Invoice History</div>",
+                    unsafe_allow_html=True,
+                )
+                if not invoices.empty:
+                    d = invoices.copy()
+                    d["invoice_date"]  = d["invoice_date"].dt.strftime("%d %b %Y")
+                    d["invoice_value"] = d["invoice_value"].apply(fmt_inr)
+                    d["tax_paid"]      = d["tax_paid"].apply(fmt_inr)
+                    d.columns = ["Date", "Buyer", "Invoice Value", "Tax Paid",
+                                 "Status", "Delay (d)"]
+                    st.dataframe(
+                        d.head(30), use_container_width=True, hide_index=True,
+                        column_config={"Delay (d)": st.column_config.NumberColumn(
+                            "Delay (d)", format="%d d")},
+                    )
+                    st.caption(f"{len(invoices)} total invoices · showing most recent 30")
+                else:
+                    st.info("No invoice data on record.")
+
+                st.markdown(
+                    "<div class='section-header' style='margin-top:0.9rem'>"
+                    "Digital Khata · Order Ledger</div>",
+                    unsafe_allow_html=True,
+                )
+                if not ledger.empty:
+                    d = ledger.copy()
+                    d["order_value"]     = d["order_value"].apply(fmt_inr)
+                    d["is_repeat_buyer"] = d["is_repeat_buyer"].map({1: "Yes", 0: "No"})
+                    d.columns = ["Buyer", "Order Date", "Delivery Date", "Settlement Date",
+                                 "Order Value", "Settlement (d)", "Repeat"]
+                    st.dataframe(
+                        d.head(30), use_container_width=True, hide_index=True,
+                        column_config={"Settlement (d)": st.column_config.NumberColumn(
+                            "Settlement (d)", format="%d d")},
+                    )
+                    st.caption(f"{len(ledger)} total entries · showing most recent 30")
+                else:
+                    st.info("No ledger data on record.")
+
+        # ── RIGHT COLUMN — Credit Underwriting Suite ──────────────────────────
+        with right_col:
+            st.markdown(
+                "<div class='section-header'>Underwriting Decision</div>",
+                unsafe_allow_html=True,
+            )
+
+            if rec_scheme:
+                st.markdown(
+                    f"""<div class='scheme-block'>
+                    <div style='font-size:0.6rem;font-weight:700;letter-spacing:0.13em;
+                                text-transform:uppercase;color:#34D399;margin-bottom:0.4rem'>
+                        Recommended Scheme</div>
+                    <div style='font-size:1.05rem;font-weight:700;color:#D1FAE5;
+                                margin-bottom:0.15rem'>{rec_scheme}</div>
+                    <div class='scheme-amount'>{fmt_inr(loan_amt)}</div>
+                    <div style='font-size:0.7rem;color:#6EE7B7;margin-top:0.18rem'>
+                        Maximum Capital Ceiling</div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    """<div style='background:rgba(239,68,68,0.07);
+                                  border:1px solid rgba(239,68,68,0.22);
+                                  border-radius:12px;padding:1.1rem 1.4rem'>
+                    <div style='font-size:0.88rem;color:#FCA5A5;font-weight:600'>
+                        No Eligible Scheme Identified</div>
+                    <div style='font-size:0.75rem;color:#7F1D1D;margin-top:0.3rem'>
+                        Review eligibility gaps below</div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+
+            st.markdown("<div style='height:0.55rem'></div>", unsafe_allow_html=True)
+
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:0.13em;"
+                "text-transform:uppercase;color:#475569;margin-bottom:0.35rem'>"
+                "Match Confidence</div>",
+                unsafe_allow_html=True,
+            )
+            st.progress(confidence, text=f"{confidence:.0%}")
+
+            st.markdown(
+                f"""<div style='margin-top:0.6rem'>
+                <div class='underwrite-kv'>
+                  <span class='underwrite-kv-key'>Invoices Reviewed</span>
+                  <span class='underwrite-kv-val'>{profile.total_invoices}</span>
+                </div>
+                <div class='underwrite-kv'>
+                  <span class='underwrite-kv-key'>Unique Trade Partners</span>
+                  <span class='underwrite-kv-val'>{profile.unique_buyers}</span>
+                </div>
+                <div class='underwrite-kv'>
+                  <span class='underwrite-kv-key'>Years Active</span>
+                  <span class='underwrite-kv-val'>{profile.years_active}</span>
+                </div>
+                <div class='underwrite-kv'>
+                  <span class='underwrite-kv-key'>Annual Turnover</span>
+                  <span class='underwrite-kv-val'>{fmt_inr(profile.annual_turnover)}</span>
+                </div>
+                <div class='underwrite-kv' style='border-bottom:none'>
+                  <span class='underwrite-kv-key'>Severe Default Rate</span>
+                  <span class='underwrite-kv-val'
+                    style='color:{"#EF4444" if profile.severe_default_rate > 0.15 else "#10B981"}'>
+                    {profile.severe_default_rate:.0%}</span>
+                </div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+
+            if alts:
+                st.markdown(
+                    "<div class='section-header' style='margin-top:0.8rem'>"
+                    "Alternative Schemes</div>",
+                    unsafe_allow_html=True,
+                )
+                alts_html = "".join(
+                    f"<div class='alt-row'>· {a}</div>" for a in alts
+                )
+                st.markdown(alts_html, unsafe_allow_html=True)
+
             st.markdown(
                 "<div class='section-header' style='margin-top:0.8rem'>"
-                "Alternative Schemes</div>",
+                "Risk Signals</div>",
                 unsafe_allow_html=True,
             )
-            alts_html = "".join(
-                f"<div class='alt-row'>· {a}</div>" for a in alts
-            )
-            st.markdown(alts_html, unsafe_allow_html=True)
+            if flags:
+                st.markdown(
+                    "".join(f"<div class='flag-item'>{f}</div>" for f in flags),
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    "<div style='font-size:0.78rem;color:#10B981'>"
+                    "✓ No risk signals identified</div>",
+                    unsafe_allow_html=True,
+                )
 
-        # ── Risk signals ──────────────────────────────────────────────────────
-        st.markdown(
-            "<div class='section-header' style='margin-top:0.8rem'>"
-            "Risk Signals</div>",
-            unsafe_allow_html=True,
-        )
-        if flags:
-            st.markdown(
-                "".join(f"<div class='flag-item'>{f}</div>" for f in flags),
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                "<div style='font-size:0.78rem;color:#10B981'>"
-                "✓ No risk signals identified</div>",
-                unsafe_allow_html=True,
-            )
+            if missing:
+                st.markdown(
+                    "<div class='section-header' style='margin-top:0.8rem'>"
+                    "Eligibility Gaps</div>",
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    "".join(f"<div class='gap-item'>{g}</div>" for g in missing),
+                    unsafe_allow_html=True,
+                )
 
-        # ── Eligibility gaps ──────────────────────────────────────────────────
-        if missing:
-            st.markdown(
-                "<div class='section-header' style='margin-top:0.8rem'>"
-                "Eligibility Gaps</div>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                "".join(f"<div class='gap-item'>{g}</div>" for g in missing),
-                unsafe_allow_html=True,
-            )
-
-        # ── Raw JSON ──────────────────────────────────────────────────────────
-        st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
-        with st.expander("Raw Underwriting JSON"):
-            st.code(json.dumps(routing, indent=2, ensure_ascii=False), language="json")
+            st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
+            with st.expander("Raw Underwriting JSON"):
+                _kit_json = json.dumps(routing, indent=2, ensure_ascii=False)
+                _dl_col, _ = st.columns([1.4, 2])
+                with _dl_col:
+                    if st.download_button(
+                        "📥 Export Kit",
+                        data=_kit_json,
+                        file_name=f"underwriting_{artisan_id:04d}.json",
+                        mime="application/json",
+                        key="dl_kit_btn",
+                    ):
+                        _log_action(
+                            _username, "UNDERWRITING_KIT_EXPORTED",
+                            profile.name, "DOWNLOADED",
+                        )
+                st.code(_kit_json, language="json")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  TAB 2 — SMART ONBOARDING (multilingual)
+#  TAB 2 — SMART ONBOARDING (all authenticated roles)
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_onboard:
@@ -1341,6 +1583,11 @@ with tab_onboard:
     if analyze_clicked:
         if stmt and stmt.strip():
             st.session_state["onboard_analyzed"] = True
+            _log_action(
+                _username, "STATEMENT_ANALYZED",
+                (stmt[:60] + "…") if len(stmt) > 60 else stmt,
+                "PARSED",
+            )
         else:
             st.warning(tr["no_input_warn"])
 
@@ -1538,3 +1785,92 @@ with tab_onboard:
             </div>""",
             unsafe_allow_html=True,
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  TAB 3 — AUDIT LOGS  (Bank Underwriter only)
+# ══════════════════════════════════════════════════════════════════════════════
+
+if _is_manager:
+    with tab_audit:
+        st.markdown(
+            "<div class='section-header'>Governance & Audit Trail</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<div style='font-size:0.82rem;color:#475569;margin-bottom:0.6rem'>"
+            "Append-only telemetry log — records every credit computation, "
+            "statement parse, and kit export. Cleared only on full database reset."
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+        audit_df = _load_audit_logs()
+
+        if not audit_df.empty:
+            # Summary stats row
+            _unique_users   = audit_df["username"].nunique()
+            _total_events   = len(audit_df)
+            _score_events   = int((audit_df["action"] == "CREDIT_SCORE_VIEWED").sum())
+            _parse_events   = int((audit_df["action"] == "STATEMENT_ANALYZED").sum())
+            _export_events  = int((audit_df["action"] == "UNDERWRITING_KIT_EXPORTED").sum())
+
+            ac1, ac2, ac3, ac4 = st.columns(4, gap="small")
+            with ac1:
+                st.markdown(
+                    f"<div class='audit-stat'>"
+                    f"<div class='audit-stat-val'>{_total_events}</div>"
+                    f"<div class='audit-stat-lbl'>Total Events</div>"
+                    f"</div>", unsafe_allow_html=True,
+                )
+            with ac2:
+                st.markdown(
+                    f"<div class='audit-stat'>"
+                    f"<div class='audit-stat-val'>{_score_events}</div>"
+                    f"<div class='audit-stat-lbl'>Scores Viewed</div>"
+                    f"</div>", unsafe_allow_html=True,
+                )
+            with ac3:
+                st.markdown(
+                    f"<div class='audit-stat'>"
+                    f"<div class='audit-stat-val'>{_parse_events}</div>"
+                    f"<div class='audit-stat-lbl'>Statements Parsed</div>"
+                    f"</div>", unsafe_allow_html=True,
+                )
+            with ac4:
+                st.markdown(
+                    f"<div class='audit-stat'>"
+                    f"<div class='audit-stat-val'>{_export_events}</div>"
+                    f"<div class='audit-stat-lbl'>Kits Exported</div>"
+                    f"</div>", unsafe_allow_html=True,
+                )
+
+            st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
+
+            audit_df.columns = ["Timestamp (UTC)", "User", "Action", "Artisan Target", "Result Status"]
+            st.dataframe(
+                audit_df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Timestamp (UTC)":  st.column_config.TextColumn("Timestamp (UTC)",  width="large"),
+                    "User":             st.column_config.TextColumn("User",             width="small"),
+                    "Action":           st.column_config.TextColumn("Action",           width="medium"),
+                    "Artisan Target":   st.column_config.TextColumn("Artisan Target",   width="large"),
+                    "Result Status":    st.column_config.TextColumn("Result Status",    width="medium"),
+                },
+            )
+            st.caption(f"{_total_events} total audit events · {_unique_users} distinct user(s) · most recent first")
+
+        else:
+            st.markdown(
+                "<div class='empty-state'>"
+                "<div class='empty-icon'>◈</div>"
+                "<div class='empty-title'>No Audit Events Yet</div>"
+                "<div class='empty-sub'>"
+                "Events are recorded automatically when credit scores are viewed, "
+                "statements are analyzed, or underwriting kits are exported."
+                "</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
