@@ -378,7 +378,14 @@ Database ready: 50 artisans | 3612 GST invoices | 1400 ledger entries
 streamlit run app.py
 ```
 
-Open **http://localhost:8501** in your browser. The sidebar lets you filter artisans by cluster (Chowk / Aminabad) or search by name. Each artisan's page shows:
+Open **http://localhost:8501** in your browser and sign in using one of the two demo accounts:
+
+| Role | Username | Password | Access Level |
+| :--- | :--- | :--- | :--- |
+| **Bank Underwriter** | `manager` | `password123` | Full access — Credit Dashboard, Smart Onboarding, Audit Logs |
+| **NGO Facilitator** | `assistant` | `password123` | Restricted — Smart Onboarding tab only |
+
+The sidebar lets you filter artisans by cluster (Chowk / Aminabad) or search by name. Each artisan's page shows:
 
 - Live credit score gauge (300–850 with CIBIL band colouring)
 - Sub-score breakdown with composite overlay
