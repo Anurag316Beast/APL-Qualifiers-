@@ -450,4 +450,4 @@ sqlite3 artisan_credit.db "
 
 ---
 
-*Built for the APL Qualifiers Hackathon — Lucknow, 2025*
+*Built for the APL Qualifiers Hackathon — Lucknow, 2026*
