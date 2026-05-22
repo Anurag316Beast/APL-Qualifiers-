@@ -73,3 +73,35 @@ Development log for the Lucknow Artisan Credit Scoring System.
 - No import errors; syntax verified before launch.
 
 ---
+
+## Session 3 — 2026-05-22
+
+**Goal:** Publish the project to GitHub and produce a comprehensive README for hackathon judges.
+
+### Done
+- **Initial GitHub push** — all 18 files committed and pushed to `https://github.com/Anurag316Beast/APL-Qualifiers-` (first commit on `main`).
+- **README.md overhaul** — complete rewrite replacing the placeholder README with a judge-ready document covering:
+  - Project title and MSME credit-invisibility hook
+  - Problem vs. solution table (traditional signal → alternative proxy mapping)
+  - Full ASCII architecture diagram tracing data from raw streams → SQLite → scoring modules → router → Streamlit dashboard, with row counts at each layer
+  - All three sub-score formulas documented with LaTeX-style notation ($CV_{adj}$, exponential decay, fulfillment clip, relationship tenure-bonus)
+  - Agent router confidence formula (three-component: credit headroom + bracket centrality + card status)
+  - Government scheme eligibility table (5 schemes, min scores, loan ranges, card requirements)
+  - Annotated file directory tree with one-line operational descriptions per module
+  - Six-step quickstart (venv → install → `python3 main.py` → `streamlit run app.py` → REPL → raw SQLite)
+  - Design decisions section explaining key architectural choices
+
+### Commits pushed
+| SHA | Message |
+|-----|---------|
+| `1577f61` | Initial commit: artisan credit scoring pipeline (18 files) |
+| `dddde31` | docs: overhaul README with full architecture, scoring math, and quickstart |
+| `735c278` | docs: update hackathon year to 2026 in README footer |
+
+### Next steps
+- [ ] Add `pytest` test suite for scoring math and router hard-gate logic.
+- [ ] Expose `score_artisan` + `route_artisan` via a lightweight FastAPI layer.
+- [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
+- [ ] Investigate ODOP Credit Line low match rate — likely a turnover-floor vs. cohort-distribution mismatch.
+
+---

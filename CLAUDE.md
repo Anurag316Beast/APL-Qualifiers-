@@ -8,6 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Run the full pipeline (drops DB, regenerates data, scores all artisans, prints Markdown report)
 python3 main.py
 
+# Launch the Streamlit dashboard (requires artisan_credit.db — run main.py first)
+streamlit run app.py
+
 # Re-generate the database only
 python3 data_generator.py
 
@@ -22,10 +25,10 @@ conn.close()
 
 # Inspect the live database
 sqlite3 artisan_credit.db ".tables"
-sqlite3 artisan_credit.db "SELECT name, credit_score FROM artisans LIMIT 5;"
+sqlite3 artisan_credit.db "SELECT name, annual_turnover FROM artisans LIMIT 5;"
 ```
 
-No build step, no test runner, no linter configured yet. Dependencies are stdlib + `pandas` + `numpy`.
+No build step, no test runner, no linter configured yet. Dependencies are stdlib + `pandas` + `numpy` + `streamlit` + `plotly`.
 
 ## Architecture
 
@@ -42,8 +45,14 @@ data_generator.py  ──exports──▶  MONTHLY_SEASONALITY (dict)
                               agent_router.py
                                    │  route_artisan() → dict (JSON-serialisable)
                                    ▼
-                               main.py  (orchestration + Markdown report)
+                 ┌─────────────────┴──────────────────┐
+                 │                                    │
+            main.py                               app.py
+    (orchestration + Markdown report)    (Streamlit dashboard — imports
+                                          from artisan_credit/ package)
 ```
+
+**`app.py`** is the Streamlit entry-point. It imports from the `artisan_credit/` package (a mirror of the three core modules) rather than the top-level files, avoiding import-path issues when Streamlit changes the working directory. It uses `@st.cache_data` keyed on `artisan_id` so artisan switches are instant after first load.
 
 **`data_generator.py`** owns all synthetic data logic and the `MONTHLY_SEASONALITY` constant. It is the sole writer to the DB (via `pandas.DataFrame.to_sql`). The payer archetype (`good` / `average` / `struggling`) is deterministically derived from the artisan index so scores are reproducible without storing the archetype in the DB.
 
