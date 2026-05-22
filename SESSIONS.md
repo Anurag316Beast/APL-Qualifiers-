@@ -156,3 +156,44 @@ Development log for the Lucknow Artisan Credit Scoring System.
 - [ ] Add Gujarati / Bhojpuri dialect support as additional language options.
 
 ---
+
+## Session 5 — 2026-05-22
+
+**Goal:** Complete UI/UX enterprise fintech dark-mode overhaul of `app.py` — transform the dashboard into a premium financial SaaS interface suitable for institutional underwriters.
+
+### Built
+
+**`app.py`** (complete rewrite, ~1,540 lines)
+- Massive CSS dark theme injected via `st.markdown(unsafe_allow_html=True)`:
+  - Palette: `#0E1117` (bg) · `#1A1D24` (card surface) · `#38BDF8` (sky accent) · `#10B981` (emerald success) · `#F59E0B` (amber warning) · `#EF4444` (red danger) · `#2E323D` (border)
+  - CSS classes: `.dash-header`, `.exec-metric`, `.risk-badge` (five tiers), `.signal-card`, `.scheme-block`, `.flag-item`, `.gap-item`, `.ob-card`, `.empty-state`, `.ob-processing` (pulsing keyframe animation)
+- **Dashboard tab:**
+  - Header bar showing artisan name, craft, cluster + risk band badge
+  - 4-column Executive Summary Matrix: Credit Score · Algorithmic Confidence · Capital Ceiling · Prompt Settlement Rate
+  - 60/40 column split (`st.columns([3, 2])`)
+  - Left column (60%) — 3 inner tabs:
+    - **📊 Multilingual Parser** — Plotly gauge + sub-score bar chart (side-by-side) + 3 signal decomposition cards (Cash Flow / Fulfillment / Relationship), each showing score/100, weight %, 3 KV rows, grade tag
+    - **📈 Invoicing Timeline** — seasonality-adjusted revenue line chart + payment latency bar chart; dark `_DARK_LAYOUT` / `_AXIS_STYLE` shared dicts; professional empty states (◈ icon)
+    - **🗃️ Ledger SQL Logs** — GST invoice + order ledger dataframes (most recent 30 rows)
+  - Right column (40%) — Underwriting Suite: scheme block (green gradient), confidence progress bar, KV inputs, risk flags, eligibility gaps, raw JSON expander
+- **Smart Onboarding tab:** dark CSS classes throughout; ◈ empty state when no analysis has run
+- Shared Plotly dark helpers: `_DARK_LAYOUT` and `_AXIS_STYLE` dicts eliminate per-chart boilerplate
+
+**`.streamlit/config.toml`** (new file)
+- Forces `base = "dark"` so native Streamlit components (dataframes, progress bars, text areas) match the injected CSS palette
+- Sets `primaryColor = "#38BDF8"`, `backgroundColor = "#0E1117"`, `secondaryBackgroundColor = "#1A1D24"`, `textColor = "#F1F5F9"`
+
+### Key decisions
+- Two complementary theming layers: `.streamlit/config.toml` for Streamlit-native widgets + CSS injection for custom HTML components.
+- Shared `_DARK_LAYOUT` / `_AXIS_STYLE` dicts avoid repeating dark-mode Plotly config on each chart.
+- `score_meta()` returns `(label, css_class, hex_color)` so badge, chart color, and card accent all derive from one call.
+- Inner tabs in the left column keep the 60/40 layout stable while maximising the data surface area visible at once.
+
+### Next steps
+- [ ] Add `pytest` test suite for scoring math, router hard-gate logic, and parser extraction accuracy.
+- [ ] Expose `score_artisan` + `route_artisan` via a lightweight FastAPI layer.
+- [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
+- [ ] Extend parser to extract artisan name and craft type from unstructured text.
+- [ ] Add Gujarati / Bhojpuri dialect support as additional language options.
+
+---
