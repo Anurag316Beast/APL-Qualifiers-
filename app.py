@@ -1416,16 +1416,14 @@ def chart_latency(invoices: pd.DataFrame) -> go.Figure:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Guard: database must exist
+# Guard: auto-initialise database on first run (supports cloud deployment)
 # ──────────────────────────────────────────────────────────────────────────────
 
 if not os.path.exists(DB_PATH):
-    st.error(
-        "**Database not found.** "
-        "Run `python3 main.py` in this directory to initialise and populate it, "
-        "then refresh this page."
-    )
-    st.stop()
+    with st.spinner("Initialising KarigarCred database — first run, please wait…"):
+        from artisan_credit.data_generator import populate_database
+        populate_database(DB_PATH)
+    st.rerun()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
