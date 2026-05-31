@@ -306,3 +306,87 @@ New classes: `.auth-wrap`, `.auth-banner`, `.auth-banner-tier`, `.perm-error`, `
 - [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
 - [ ] Extend parser to extract artisan name and craft type from unstructured text.
 - [ ] Add Gujarati / Bhojpuri dialect support as additional language options.
+
+---
+
+## Session 8 — 2026-05-31
+
+**Goal:** Complete UI/UX overhaul to match the KarigarCred design spec — migrating from the custom dark theme to a production-grade design system with IBM Plex fonts, CSS variable tokens, indigo accent, and a fully redesigned component library.
+
+### Built
+
+**`app.py`** (complete redesign, +381 net lines)
+
+#### 1. KarigarCred Design System
+- CSS variable token system injected on `body` — two complete palettes (dark and light), toggled by `st.session_state["kc_dark"]` at runtime without a page reload.
+- Dark tokens: `--bg:#0c0e13` · `--surface:#14171e` · `--accent:#4f46d6` (indigo) · five risk tiers (`--t-prime` → `--t-sub`).
+- Light tokens: `--bg:#f1f1ec` · `--surface:#ffffff` · same accent and tier variables with higher-contrast hex values.
+- Fonts: **IBM Plex Sans** (UI) + **IBM Plex Mono** (numbers, data, monospace labels) + **Noto Sans Devanagari** (Hindi / Awadhi scripts), all loaded via Google Fonts `@import`.
+
+#### 2. Light / Dark Mode Toggle
+- ☾ / ☀ button in the sidebar header row persists `kc_dark` in session state and calls `st.rerun()` — the entire app re-renders with the opposite CSS variable set and Plotly chart colours.
+- Plotly chart accent, grid, and tick colours are computed from `_kc_dark` at module load and passed into `_DARK_LAYOUT` / `_AXIS_STYLE`.
+
+#### 3. KarigarCred Brand Header
+- New top-of-dashboard `kc-brand-header` bar: `◈` logo mark, "KarigarCred" wordmark, "INSTITUTIONAL UNDERWRITING TERMINAL" sub-label.
+- Centre: live status pill — `●` dot (CSS box-shadow glow), `LIVE · artisan_credit.db / Lucknow MSME cohort`.
+- Right: user avatar chip showing initials `BU`, display name, and role tier.
+
+#### 4. Cohort Strip
+- Horizontally segmented 6-cell strip rendered above the artisan subject bar:
+  - Five stat cells: Portfolio (50), GST invoices (live count), Ledger rows (live count), Mean score (686, 501–790 range), Scheme-matched (50/50).
+  - Sixth cell: Scheme coverage mini-bars — MUDRA Kishor 68 % · MUDRA Shishu 28 % · PM Vishwakarma 4 %, each coloured with its risk-tier variable.
+
+#### 5. Subject Bar
+- Replaced flat `.dash-header` with `kc-subject`: large artisan name + chip row (`ART-XXXX` · cluster · craft type · years active · card status).
+- Risk band badge is a **bordered pill** (`kc-band-badge`) styled inline from `band_color` — e.g. `● T2 · Strong` in the exact tier colour.
+
+#### 6. 6-Column Executive Matrix
+- Expanded from 4 → 6 columns: adds **Default Rate** (24-month window, coloured red when > 15 %) and **Repeat-Buyer Share** (order ledger).
+- First cell has a left accent bar in `--accent`; all values use IBM Plex Mono for tabular alignment.
+
+#### 7. Composite Credit Assessment Panel
+- New section above the inner tabs: gauge chart (left) + sub-score horizontal bars (right) in `st.columns([1, 1.4])`.
+- Sub-score bars and gauge needle use the artisan's current band colour.
+
+#### 8. Signal Decomposition Cards (A/B/C/D/E grades)
+- Inner tab renamed from "Multilingual Parser" → **Signal Decomposition**.
+- Three `kc-sig` cards: Cash-Flow Stability (30 %) · Invoice Fulfillment (40 %) · Trade Relationship (30 %).
+- Each card: title + weight badge, large score `/100`, letter grade A–E (colour-coded), three KV data rows.
+- `sig_grade(v)` helper: A ≥ 82 · B ≥ 70 · C ≥ 58 · D ≥ 46 · E < 46.
+
+#### 9. Underwriting Suite Redesign
+- `kc-uw-panel`: header row with tier tag, `kc-scheme-block` (indigo-tinted, eyebrow + name + loan range + confidence bar), alternative facilities list with coloured dots, 2-column callout grid (risk signals / eligibility gaps).
+- "Export Underwriting Kit" rendered as `st.button(type="primary")`.
+
+#### 10. Smart Onboarding — KarigarCred Field Assistant
+- Field Assistant eyebrow + segmented language control (3 `st.button` columns).
+- Extracted parameters card with ✓/✕ check icons and "4/4" count badge.
+- Recommendation card: large score + bordered band badge, scheme + confidence bar, per-item callout rows.
+- New **Push to Underwriter** button with success feedback.
+
+#### 11. Updated Risk Bands
+- `score_meta()` rewritten for 5 new tiers: Prime ≥ 760 · Strong ≥ 720 · Standard ≥ 660 · Watch ≥ 580 · Sub-prime < 580.
+- `score_tier()` returns `T1`–`T5` for the band badge.
+
+#### 12. `.streamlit/config.toml`
+- `primaryColor` → `#4f46d6`, `backgroundColor` → `#0c0e13`, `secondaryBackgroundColor` → `#14171e`, `textColor` → `#eef1f6`.
+
+### Verified
+- `python3 -m py_compile app.py` — no syntax errors.
+- App starts and all tabs render without runtime exceptions.
+- Dashboard, cohort strip, subject bar, exec matrix, signal cards, and underwriting suite confirmed via Playwright screenshot.
+- Dark mode toggle persists across artisan switches.
+
+### Key decisions
+- CSS tokens injected via a small f-string separate from the main component CSS block (plain triple-quoted string) — avoids escaping hundreds of CSS curly braces.
+- Underwriting Suite split into four `st.markdown()` calls — Streamlit handles smaller, self-contained HTML blocks more reliably than one giant f-string.
+- `sig_grade()` and `score_tier()` as standalone helpers so signal cards and subject bar share consistent grading logic.
+- Plotly chart colours derived from `_kc_dark` flag to match the active theme.
+
+### Next steps
+- [ ] Add `pytest` test suite for scoring math, router hard-gate logic, and parser extraction accuracy.
+- [ ] Expose `score_artisan` + `route_artisan` via a lightweight FastAPI layer.
+- [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
+- [ ] Extend parser to extract artisan name and craft type from unstructured text.
+- [ ] Add Gujarati / Bhojpuri dialect support as additional language options.

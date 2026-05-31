@@ -126,30 +126,36 @@ The pipeline is strictly linear with no circular imports. Each layer has a singl
 ┌─────────────────────────────────────────────────────────────────────┐
 │                           app.py                                    │
 │                                                                     │
-│   Streamlit Dashboard  (4 tabs for Bank Underwriter role)           │
-│                                                                     │
-│   📊 Credit Dashboard                                               │
-│   • Credit score gauge (300–850, CIBIL-scale colour bands)          │
-│   • Sub-score breakdown bar chart + 3 signal-decomposition cards    │
-│   • Monthly revenue consistency plot (actual vs seasonality-adj)    │
-│   • Invoice payment latency distribution (5 buckets)                │
-│   • Scheme recommendation card + confidence meter + audit export    │
-│   • GST invoice table + Digital Khata ledger (most recent 30 rows)  │
-│                                                                     │
-│   🗣️ Smart Onboarding                                               │
-│   • Multilingual free-text parser (English / Hindi / Awadhi)        │
-│   • Instant credit estimate + scheme recommendation                 │
-│                                                                     │
-│   💬 WhatsApp Business Simulation Sandbox          ← NEW            │
-│   • Smartphone-styled WhatsApp chat UI                              │
-│   • Simulated OCR ingest of Khata bills & dispatch notes            │
-│   • Real-time SQLite write + cache bust → live dashboard update     │
-│   • Full audit trail of every WhatsApp ingest event                 │
-│                                                                     │
-│   🔒 Audit Logs  (Bank Underwriter only)                            │
-│   • Append-only event log: score views, parses, kit exports,        │
-│     WhatsApp ingests                                                │
-└─────────────────────────────────────────────────────────────────────┘
+│   KarigarCred Dashboard  (IBM Plex fonts · indigo accent · light/dark)  │
+│                                                                         │
+│   📊 Credit Dashboard  (Bank Underwriter only)                          │
+│   • Brand header: ◈ KarigarCred · LIVE status · dark-mode toggle        │
+│   • Cohort strip: portfolio stats + scheme coverage mini-bars           │
+│   • Subject bar: ART-XXXX chips + bordered T1–T5 band badge             │
+│   • 6-column Executive Matrix (score · confidence · ceiling ·           │
+│     prompt settlement · default rate · repeat-buyer share)              │
+│   • Composite Credit Assessment: gauge + sub-score bars side-by-side    │
+│   • Signal Decomposition: 3 kc-sig cards with A/B/C/D/E grades          │
+│   • Invoicing Timeline: revenue consistency + latency distribution       │
+│   • Ledger SQL: GST invoice table + Digital Khata (30 rows each)        │
+│   • Underwriting Suite: scheme card · alt facilities · callout grid     │
+│                                                                         │
+│   🗣️ Smart Onboarding  (KarigarCred Field Assistant)                    │
+│   • Segmented language control (English / हिन्दी / अवधी)               │
+│   • Free-text parser with ✓/✕ param extraction cards                   │
+│   • Recommendation card: band badge + confidence bar + callouts         │
+│   • Push to Underwriter button                                          │
+│                                                                         │
+│   💬 WhatsApp Business Simulation Sandbox                               │
+│   • Smartphone-styled WhatsApp chat UI                                  │
+│   • Simulated OCR ingest of Khata bills & dispatch notes                │
+│   • Real-time SQLite write + cache bust → live dashboard update         │
+│   • Full audit trail of every WhatsApp ingest event                     │
+│                                                                         │
+│   🔒 Audit Logs  (Bank Underwriter only)                                │
+│   • Append-only event log: score views, parses, kit exports,            │
+│     WhatsApp ingests                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -403,14 +409,17 @@ Open **http://localhost:8501** in your browser and sign in using one of the two 
 | **Bank Underwriter** | `manager` | `password123` | Full access — Credit Dashboard, Smart Onboarding, **💬 WhatsApp Sandbox**, Audit Logs |
 | **NGO Facilitator** | `assistant` | `password123` | Restricted — Smart Onboarding + **💬 WhatsApp Sandbox** |
 
-The sidebar lets you filter artisans by cluster (Chowk / Aminabad) or search by name. Each artisan's page shows:
+The sidebar includes a **☾ / ☀ dark-mode toggle** — click it to switch between the KarigarCred dark and light palettes. Each artisan's Credit Dashboard page shows:
 
-- Live credit score gauge (300–850 with CIBIL band colouring)
-- Sub-score breakdown with composite overlay
-- 24-month revenue consistency chart (actual vs. seasonality-adjusted)
-- Invoice payment latency distribution (0–15d / 16–30d / 31–45d / 46–90d / 91+d)
-- Scheme recommendation card with confidence meter and eligibility gaps
-- Full GST invoice table and Digital Khata ledger (most recent 30 entries)
+- **◈ KarigarCred brand header** with live DB status indicator
+- **Cohort strip** — portfolio stats (50 artisans, 2,600+ invoices) + scheme coverage bars
+- **Subject bar** — `ART-XXXX` ID chip, cluster, craft, risk band badge (`T1 Prime` → `T5 Sub-prime`)
+- **6-column Executive Matrix** — score · confidence · capital ceiling · prompt settlement · default rate · repeat-buyer share
+- **Composite Credit Assessment** — arc gauge + sub-score bars, 300–850 scale
+- **Signal Decomposition** — three cards (Cash-Flow / Fulfillment / Relationship) with A/B/C/D/E grades
+- **Invoicing Timeline** — 24-month revenue chart + 5-bucket latency distribution
+- **Ledger SQL** — GST invoice table + Digital Khata (30 entries each)
+- **Underwriting Suite** — scheme card, alternative facilities, risk-signal / eligibility-gap callout grid
 
 Switch to the **💬 WhatsApp Sandbox** tab to simulate a live WhatsApp Business ingest:
 
@@ -489,6 +498,7 @@ sqlite3 artisan_credit.db "
 | Data pipeline & scoring | Python 3.12 · Pandas · NumPy |
 | Relational storage | SQLite (zero-infrastructure, file-based) |
 | Dashboard | Streamlit · Plotly |
+| UI design system | KarigarCred · IBM Plex Sans/Mono · CSS variable tokens · light/dark mode |
 | Scoring methodology | Deterministic, explainable — no black-box ML |
 
 ---
