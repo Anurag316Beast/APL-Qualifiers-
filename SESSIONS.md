@@ -245,3 +245,64 @@ New classes: `.auth-wrap`, `.auth-banner`, `.auth-banner-tier`, `.perm-error`, `
 - [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
 - [ ] Extend parser to extract artisan name and craft type from unstructured text.
 - [ ] Add Gujarati / Bhojpuri dialect support as additional language options.
+
+---
+
+## Session 7 — 2026-05-31
+
+**Goal:** Add a game-winning demo feature — a WhatsApp Business Simulation Sandbox — that shows the system acting as a real-time backend listener to WhatsApp media messages, runs OCR extraction, and persists new records to the live SQLite database.
+
+### Built
+
+**`app.py`** (extended, +386 lines)
+
+#### 1. WhatsApp Smartphone UI (`💬 WhatsApp Sandbox` tab)
+- New tab added to both role paths: `manager` (4 tabs: Dashboard / Onboarding / WhatsApp / Audit) and `assistant` (2 tabs: Onboarding / WhatsApp).
+- Full smartphone frame rendered in pure CSS/HTML: `#E5DDD5` chat background (WhatsApp brand colour), `#075E54` dark-green header bar with status row, scrollable `.wa-body` chat area, decorative input bar.
+- Two bubble classes: `.wa-in` (white, left-aligned — agent) and `.wa-out` (`#DCF8C6` green, right-aligned — artisan), each with timestamps and read-tick markers (`✓` / `✓✓`).
+- Initial conversation seeded statically (agent greeting → artisan confirms → SmartScan™ activation message).
+- After OCR ingest, 5 new messages render into the thread: attachment bubble → "Vision Analytics Pipeline processing" status → extraction summary card → "Database Updated!" confirmation → artisan thank-you. Thread re-renders entirely from session state on each `st.rerun()`.
+
+#### 2. OCR & Media Ingest Simulator
+- **Artisan picker:** `st.selectbox` over all 50 live artisans; invoice is written under the chosen artisan's ID so the Credit Dashboard update is visible for any selected record.
+- **Sample scan selector:** two pre-loaded document simulations:
+  - `Handwritten Khata Bill.jpg · Chowk Cluster` — Hindi-script Khata receipt for ₹18,500 Chikankari invoice, 45-day terms, buyer "Lucknow Chikankari House".
+  - `Logistics Dispatch Note.png · Aminabad Cluster` — English dispatch note for ₹42,000 Zardozi order, 60-day terms, buyer "Craftroot Exports".
+- 1.5-second `st.spinner("Processing Image via Vision Analytics Pipeline…")` simulates Vision API latency before the DB write.
+
+#### 3. Real Database Write + Cache Bust
+- `_wa_insert_invoice(artisan_id, buyer, value, overdue_days)` helper:
+  - Generates a unique invoice number `WA-{artisan_id:03d}-{uuid4 hex[:8].upper()}` with today's date.
+  - Computes 5% GST and maps overdue_days to `Paid` / `Pending` / `Overdue` status.
+  - Inserts one row into `gst_invoices` via a direct `sqlite3.connect` write.
+  - Calls `load_profile.clear()`, `load_invoices.clear()`, `load_routing.clear()` — busts all per-artisan Streamlit cache entries so the Credit Dashboard reflects the new record immediately.
+- Every ingest is logged as `WHATSAPP_OCR_INGEST` in `audit_logs` — visible in the Audit Logs tab.
+
+#### 4. Extraction Results Panel
+- OCR raw text displayed in a monospace `.wa-ocr-text` block (dark `#0D1117` background, `SF Mono` / `Courier New` font).
+- `language_parser.parse_trade_statement()` runs on the embedded statement text; `_build_synthetic_profile()` converts the `ParsedStatement` to a `CreditProfile` to show the estimated credit score.
+- KV table shows: Cluster Detected, Monthly Turnover, Payment Latency, Invoice Value, Buyer, Est. Credit Score, Inserted Invoice #, Artisan Record.
+- Pulsing green `wa-dot` success banner: *"Database Updated Successfully via WhatsApp Stream! Underwriter Dashboard refreshed live."*
+- Cross-tab prompt tells the judge exactly which artisan to select in the Credit Dashboard to see the updated invoice count and recalculated score.
+- **↺ Reset Sandbox** button clears all `wa_*` session-state keys and calls `st.rerun()` — restores the phone to its initial state.
+
+#### 5. New CSS classes (added to global style block)
+`.wa-phone`, `.wa-status`, `.wa-header`, `.wa-avatar`, `.wa-cname`, `.wa-cstat`, `.wa-body`, `.wa-divider`, `.wa-in`, `.wa-out`, `.wa-ts`, `.wa-ts-r`, `.wa-attach`, `.wa-bar`, `.wa-pill`, `.wa-send`, `.wa-ocr-panel`, `.wa-ocr-hdr`, `.wa-ocr-text`, `.wa-success`, `.wa-dot` (`@keyframes wa-blink`), `.wa-kv`, `.wa-kv-k`, `.wa-kv-v`.
+
+### Verified
+- `python3 -m py_compile app.py` — no syntax errors.
+- End-to-end DB write confirmed: artisan 1 invoice count incremented from 55 → 56; `score_artisan` returned updated `total_invoices=56` without restarting the app.
+- All sample parse targets (Chowk/Khata, Aminabad/Dispatch) extracted correct cluster, turnover, and latency values.
+
+### Key decisions
+- `_wa_insert_invoice` placed after the cached loaders so `load_profile.clear()` etc. are in scope at definition time; the function is only called at Streamlit runtime, not at module-load time, so ordering is safe.
+- Phone frame is pure `st.markdown(unsafe_allow_html=True)` — no additional `streamlit-elements` or JS dependency.
+- `_WA_SAMPLES` stores OCR raw text (displayed verbatim) and a natural-language statement (fed to `language_parser`) as separate keys — raw text looks like imperfect scanner output while the statement is grammar-correct for reliable parsing.
+- Per-function `.clear()` calls rather than global `st.cache_data.clear()` — only artisan-level caches are invalidated; artisan list and chart config caches remain warm.
+
+### Next steps
+- [ ] Add `pytest` test suite for scoring math, router hard-gate logic, and parser extraction accuracy.
+- [ ] Expose `score_artisan` + `route_artisan` via a lightweight FastAPI layer.
+- [ ] Explore adding a bureau-pull simulation (CIBIL stub) as a fourth scoring input.
+- [ ] Extend parser to extract artisan name and craft type from unstructured text.
+- [ ] Add Gujarati / Bhojpuri dialect support as additional language options.

@@ -365,6 +365,36 @@ html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
     text-transform: uppercase; color: #475569; margin-top: 0.3rem;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   WHATSAPP BUSINESS SIMULATION SANDBOX
+───────────────────────────────────────────────────────────────────────── */
+.wa-phone  { background:#E5DDD5; border-radius:16px; overflow:hidden; border:2px solid #2E323D; max-width:390px; margin:0 auto; box-shadow:0 12px 40px rgba(0,0,0,.55); font-family:-apple-system,'Helvetica Neue',sans-serif; }
+.wa-status { background:#054C41; color:rgba(255,255,255,.85); font-size:.58rem; padding:.18rem .9rem; display:flex; justify-content:space-between; letter-spacing:.03em; }
+.wa-header { background:#075E54; padding:.55rem .85rem; display:flex; align-items:center; gap:.6rem; }
+.wa-avatar { width:34px; height:34px; background:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:700; color:#fff; flex-shrink:0; }
+.wa-cname  { font-size:.84rem; font-weight:700; color:#fff; line-height:1.1; }
+.wa-cstat  { font-size:.58rem; color:#A8D5A2; }
+.wa-body   { background:#E5DDD5; padding:.65rem .75rem; min-height:300px; max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:.38rem; }
+.wa-divider { text-align:center; font-size:.64rem; color:#555; background:rgba(255,255,255,.55); border-radius:6px; padding:.12rem .6rem; align-self:center; margin:.25rem 0; }
+.wa-in  { background:#fff; color:#111; border-radius:0 8px 8px 8px; padding:.42rem .65rem; max-width:83%; align-self:flex-start; box-shadow:0 1px 2px rgba(0,0,0,.1); font-size:.78rem; line-height:1.48; }
+.wa-out { background:#DCF8C6; color:#111; border-radius:8px 0 8px 8px; padding:.42rem .65rem; max-width:83%; align-self:flex-end; box-shadow:0 1px 2px rgba(0,0,0,.1); font-size:.78rem; line-height:1.48; }
+.wa-ts  { font-size:.56rem; color:#888; margin-top:.12rem; }
+.wa-ts-r { text-align:right; }
+.wa-attach { background:rgba(0,0,0,.06); border-radius:6px; padding:.3rem .45rem; font-size:.72rem; color:#333; display:flex; align-items:center; gap:.35rem; }
+.wa-bar { background:#F0F0F0; padding:.42rem .65rem; display:flex; align-items:center; gap:.45rem; border-top:1px solid #ccc; }
+.wa-pill { background:#fff; border-radius:18px; padding:.32rem .7rem; font-size:.72rem; color:#aaa; flex:1; border:1px solid #e0e0e0; }
+.wa-send { background:#25D366; color:#fff; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; }
+.wa-ocr-panel { background:#13161E; border:1px solid #2E323D; border-radius:12px; padding:1.15rem 1.35rem; }
+.wa-ocr-hdr { font-size:.59rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:#475569; margin-bottom:.7rem; padding-bottom:.4rem; border-bottom:1px solid #2E323D; }
+.wa-ocr-text { font-family:'SF Mono','Courier New',monospace; font-size:.7rem; color:#94A3B8; background:#0D1117; border:1px solid #2E323D; border-radius:8px; padding:.7rem; line-height:1.65; white-space:pre-wrap; }
+.wa-success { background:linear-gradient(135deg,rgba(16,185,129,.15) 0%,rgba(16,185,129,.05) 100%); border:1px solid rgba(16,185,129,.38); border-radius:10px; padding:.8rem 1.1rem; display:flex; align-items:center; gap:.7rem; font-size:.8rem; color:#6EE7B7; font-weight:600; }
+.wa-dot { width:9px; height:9px; border-radius:50%; background:#10B981; flex-shrink:0; animation:wa-blink .9s ease-in-out infinite; }
+@keyframes wa-blink { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.9);opacity:.35;} }
+.wa-kv { display:flex; justify-content:space-between; align-items:center; padding:.3rem 0; border-bottom:1px solid #1E2229; font-size:.77rem; }
+.wa-kv:last-child { border-bottom:none; }
+.wa-kv-k { color:#64748B; }
+.wa-kv-v { font-weight:700; color:#F1F5F9; }
+
 /* ── Hide Streamlit chrome ───────────────────────────────────────── */
 #MainMenu { visibility: hidden; }
 footer     { visibility: hidden; }
@@ -664,6 +694,57 @@ SAMPLES: dict[str, str] = {
     ),
 }
 
+# Sample OCR documents for the WhatsApp Simulation Sandbox
+_WA_SAMPLES: dict[str, dict] = {
+    "📄 Handwritten Khata Bill.jpg  ·  Chowk Cluster": {
+        "thumb":         "Khata_Bill_Chowk_Apr2024.jpg",
+        "ocr_raw": (
+            "कच्चा खाता — चौक, लखनऊ\n"
+            "दिनाँक : 15/04/2024\n"
+            "ग्राहक : Lucknow Chikankari House\n"
+            "माल    : 12 नग कढ़ाई कुर्ता कपड़ा\n"
+            "रकम    : ₹18,500\n"
+            "GST (5%): ₹925\n"
+            "कुल बिल: ₹19,425\n"
+            "भुगतान : 45 दिन बाद\n"
+            "दस्तखत : रज़िया बेगम ✎"
+        ),
+        "statement":     (
+            "चौक में चिकनकारी का काम है। "
+            "महीने का 18,500 रुपये का इनवॉइस बनता है "
+            "पर पेमेंट 45 दिन बाद मिलती है।"
+        ),
+        "invoice_value": 18_500.0,
+        "buyer":         "Lucknow Chikankari House",
+        "overdue_days":  45,
+        "cluster_hint":  "Chowk",
+    },
+    "📄 Logistics Dispatch Note.png  ·  Aminabad Cluster": {
+        "thumb":         "Dispatch_Note_Aminabad_May2024.png",
+        "ocr_raw": (
+            "DISPATCH NOTE  #DN-2024-0892\n"
+            "Supplier : Aminabad Zardozi Workshop\n"
+            "Buyer    : Craftroot Exports\n"
+            "Date     : 22/05/2024\n"
+            "Goods    : Zardozi embroidered sarees — 6 pcs\n"
+            "Value    : ₹42,000\n"
+            "GST 5%   : ₹2,100\n"
+            "Total    : ₹44,100\n"
+            "Terms    : Net 60 days from delivery\n"
+            "Status   : Dispatched & Confirmed"
+        ),
+        "statement":     (
+            "Aminabad में जरदोजी का काम है। "
+            "Monthly invoice around 42,000 rupees. "
+            "Bills clear after 60 days. Need a loan of 80,000."
+        ),
+        "invoice_value": 42_000.0,
+        "buyer":         "Craftroot Exports",
+        "overdue_days":  60,
+        "cluster_hint":  "Aminabad",
+    },
+}
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Core helpers
@@ -833,6 +914,34 @@ def load_ledger(artisan_id: int) -> pd.DataFrame:
     )
     conn.close()
     return df
+
+
+def _wa_insert_invoice(artisan_id: int, buyer: str, value: float, overdue_days: int) -> str:
+    """Insert a WhatsApp-streamed invoice into the live DB and bust per-artisan caches."""
+    import uuid as _uuid
+    from datetime import date as _date
+
+    inv_num  = f"WA-{artisan_id:03d}-{_uuid.uuid4().hex[:8].upper()}"
+    inv_date = _date.today().isoformat()
+    tax      = round(value * 0.05, 2)
+    status   = "Paid" if overdue_days == 0 else ("Pending" if overdue_days <= 60 else "Overdue")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(
+        "INSERT INTO gst_invoices "
+        "(artisan_id, invoice_number, invoice_date, buyer_name, "
+        " invoice_value, tax_paid, payment_status, overdue_days) "
+        "VALUES (?,?,?,?,?,?,?,?)",
+        (artisan_id, inv_num, inv_date, buyer, value, tax, status, overdue_days),
+    )
+    conn.commit()
+    conn.close()
+
+    load_profile.clear()
+    load_invoices.clear()
+    load_routing.clear()
+
+    return inv_num
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1088,14 +1197,16 @@ with st.sidebar:
 # ──────────────────────────────────────────────────────────────────────────────
 
 if _is_manager:
-    tab_dash, tab_onboard, tab_audit = st.tabs([
+    tab_dash, tab_onboard, tab_wa, tab_audit = st.tabs([
         tr["dashboard_tab"],
         tr["onboarding_tab"],
+        "💬 WhatsApp Sandbox",
         "🔒 Audit Logs",
     ])
 else:
-    _tab_list  = st.tabs([tr["onboarding_tab"]])
+    _tab_list   = st.tabs([tr["onboarding_tab"], "💬 WhatsApp Sandbox"])
     tab_onboard = _tab_list[0]
+    tab_wa      = _tab_list[1]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1785,6 +1896,279 @@ with tab_onboard:
             </div>""",
             unsafe_allow_html=True,
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  TAB — WHATSAPP BUSINESS SIMULATION SANDBOX  (all roles)
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_wa:
+    st.markdown(
+        "<div class='section-header'>"
+        "WhatsApp Business API · Live Credit Intelligence Ingestion Stream"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+    # ── Session state defaults ────────────────────────────────────────────────
+    for _k, _v in [
+        ("wa_step", 0), ("wa_sample", None),
+        ("wa_art_id", None), ("wa_inv_num", None),
+    ]:
+        if _k not in st.session_state:
+            st.session_state[_k] = _v
+
+    _wa_step    = st.session_state["wa_step"]
+    _wa_sample  = st.session_state["wa_sample"]
+    _wa_art_id  = st.session_state["wa_art_id"]
+    _wa_inv_num = st.session_state["wa_inv_num"]
+
+    wa_left, wa_right = st.columns([1.18, 1], gap="large")
+
+    # ── Helper: render a single WhatsApp bubble ───────────────────────────────
+    def _wa_bubble_in(text: str, ts: str) -> str:
+        return (
+            f"<div><div class='wa-in'>{text}</div>"
+            f"<div class='wa-ts'>✓&nbsp;{ts}</div></div>"
+        )
+
+    def _wa_bubble_out(text: str, ts: str, attach: str = "") -> str:
+        inner = f"<div class='wa-attach'>📎&nbsp;{attach}</div>" if attach else text
+        return (
+            f"<div style='display:flex;flex-direction:column;align-items:flex-end'>"
+            f"<div class='wa-out'>{inner}</div>"
+            f"<div class='wa-ts wa-ts-r'>✓✓&nbsp;{ts}</div></div>"
+        )
+
+    # ── Left column — smartphone UI ───────────────────────────────────────────
+    with wa_left:
+
+        # Build chat thread
+        _chat = (
+            "<div class='wa-divider'>Today</div>"
+            + _wa_bubble_in(
+                "नमस्कार! 🙏<br>"
+                "अपना नया ऑर्डर या इनवॉइस का विवरण यहाँ भेजें।<br>"
+                "<i style='color:#888;font-size:.72rem'>Hello! Send your new order or invoice "
+                "details here — photo, voice note, or text.</i>",
+                "10:02",
+            )
+            + _wa_bubble_out(
+                "ठीक है! अभी bill की फोटो भेजता हूँ 📸<br>"
+                "<i style='color:#555;font-size:.72rem'>Ok! Sending bill photo now.</i>",
+                "10:04",
+            )
+            + _wa_bubble_in(
+                "📸 <b>SmartScan™ Active</b><br>"
+                "कृपया बिल या खाता बही की <b>स्पष्ट फोटो</b> भेजें।<br>"
+                "<i style='color:#888;font-size:.72rem'>Please send a clear photo of the "
+                "bill or Khata ledger.</i>",
+                "10:05",
+            )
+        )
+
+        if _wa_step == 1 and _wa_sample and _wa_sample in _WA_SAMPLES:
+            _scan = _WA_SAMPLES[_wa_sample]
+            _p    = parse_trade_statement(_scan["statement"])
+            _chat += (
+                _wa_bubble_out("", "10:06", attach=_scan["thumb"])
+                + _wa_bubble_in(
+                    "⚙️ <b>Vision Analytics Pipeline</b><br>"
+                    "<code style='font-size:.65rem;color:#555'>"
+                    "OCR → Language Parser → Credit Engine</code><br>"
+                    "<i style='color:#888;font-size:.72rem'>Processing image…</i>",
+                    "10:06",
+                )
+                + _wa_bubble_in(
+                    f"✅ <b>Extraction Complete!</b><br><br>"
+                    f"<b>Cluster:</b> {_p.cluster or _scan['cluster_hint']}<br>"
+                    f"<b>Invoice Value:</b> ₹{_scan['invoice_value']:,.0f}<br>"
+                    f"<b>Buyer:</b> {_scan['buyer']}<br>"
+                    f"<b>Payment Terms:</b> {_scan['overdue_days']} days<br><br>"
+                    f"<i style='color:#888;font-size:.72rem'>"
+                    f"Syncing to credit database… ✓</i>",
+                    "10:07",
+                )
+                + _wa_bubble_in(
+                    f"🏦 <b>Database Updated!</b><br>"
+                    f"Invoice <code>{_wa_inv_num}</code> recorded.<br>"
+                    f"Credit score recalculated. Underwriter dashboard refreshed. 📊",
+                    "10:07",
+                )
+                + _wa_bubble_out(
+                    "बहुत अच्छा! शुक्रिया 🙏<br>"
+                    "<i style='color:#555;font-size:.72rem'>Great! Thank you.</i>",
+                    "10:08",
+                )
+            )
+
+        st.markdown(
+            f"""<div class='wa-phone'>
+              <div class='wa-status'>
+                <span>9:41 AM</span><span>▋▋▋&nbsp;WiFi&nbsp;🔋</span>
+              </div>
+              <div class='wa-header'>
+                <span style='color:rgba(255,255,255,.7);font-size:1.1rem;margin-right:.2rem'>←</span>
+                <div class='wa-avatar'>अ</div>
+                <div>
+                  <div class='wa-cname'>Artisan Credit Bot</div>
+                  <div class='wa-cstat'>online&nbsp;·&nbsp;SmartScan™ enabled</div>
+                </div>
+                <span style='margin-left:auto;color:rgba(255,255,255,.65);font-size:1.2rem'>⋮</span>
+              </div>
+              <div class='wa-body'>{_chat}</div>
+              <div class='wa-bar'>
+                <span style='font-size:1rem;color:#777'>😊</span>
+                <div class='wa-pill'>Type a message</div>
+                <span style='font-size:1rem;color:#777'>📎</span>
+                <div class='wa-send'>➤</div>
+              </div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+    # ── Right column — OCR controls + extraction results ──────────────────────
+    with wa_right:
+
+        # Artisan picker
+        _all_art     = load_artisan_list()
+        _art_labels  = [
+            f"{r['name']}  ·  {r['cluster']}  ·  {r['craft_type']}"
+            for _, r in _all_art.iterrows()
+        ]
+        _art_pick = st.selectbox(
+            "Simulating WhatsApp feed from artisan:",
+            options=_art_labels,
+            key="wa_artisan_pick",
+        )
+        _art_row   = _all_art.iloc[_art_labels.index(_art_pick)]
+        _sel_art_id = int(_art_row["id"])
+
+        st.markdown("<div style='height:0.2rem'></div>", unsafe_allow_html=True)
+
+        st.markdown(
+            "<div class='wa-ocr-hdr' style='margin-bottom:.6rem'>"
+            "📎 Attach Bill / Ledger Image — OCR Simulation</div>",
+            unsafe_allow_html=True,
+        )
+
+        _scan_pick = st.selectbox(
+            "Select sample scan document:",
+            options=list(_WA_SAMPLES.keys()),
+            key="wa_scan_select",
+        )
+
+        st.markdown(
+            "<div style='font-size:0.74rem;color:#475569;margin:.3rem 0 .7rem;line-height:1.55'>"
+            "In production: artisan photographs their physical bill on WhatsApp. "
+            "Our backend intercepts the media message and runs Vision OCR → "
+            "Language Parser → Credit Engine in under 2 seconds.</div>",
+            unsafe_allow_html=True,
+        )
+
+        _btn_col, _ = st.columns([1.4, 1])
+        with _btn_col:
+            _ingest_btn = st.button(
+                "🚀 Simulate OCR Ingest →",
+                type="primary",
+                use_container_width=True,
+                key="wa_ingest_btn",
+            )
+
+        if _ingest_btn:
+            _chosen_scan = _WA_SAMPLES[_scan_pick]
+            with st.spinner("Processing Image via Vision Analytics Pipeline…"):
+                import time as _time_mod
+                _time_mod.sleep(1.5)
+
+            _new_inv = _wa_insert_invoice(
+                _sel_art_id,
+                _chosen_scan["buyer"],
+                _chosen_scan["invoice_value"],
+                _chosen_scan["overdue_days"],
+            )
+            _log_action(
+                _username, "WHATSAPP_OCR_INGEST",
+                _art_row["name"], f"Invoice:{_new_inv}",
+            )
+            st.session_state["wa_step"]    = 1
+            st.session_state["wa_sample"]  = _scan_pick
+            st.session_state["wa_art_id"]  = _sel_art_id
+            st.session_state["wa_inv_num"] = _new_inv
+            st.rerun()
+
+        # ── Results panel (shown after processing) ────────────────────────────
+        if _wa_step == 1 and _wa_sample and _wa_sample in _WA_SAMPLES:
+            _scan_res = _WA_SAMPLES[_wa_sample]
+
+            st.markdown(
+                "<div class='wa-success'>"
+                "<div class='wa-dot'></div>"
+                "Database Updated Successfully via WhatsApp Stream! "
+                "Underwriter Dashboard refreshed live."
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("<div style='height:.65rem'></div>", unsafe_allow_html=True)
+
+            # OCR raw text
+            st.markdown(
+                "<div class='wa-ocr-panel'>"
+                "<div class='wa-ocr-hdr'>Extracted OCR Text Block</div>"
+                f"<div class='wa-ocr-text'>{_scan_res['ocr_raw']}</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("<div style='height:.55rem'></div>", unsafe_allow_html=True)
+
+            # Parsed params + DB record summary
+            _p_res   = parse_trade_statement(_scan_res["statement"])
+            _s_res   = _build_synthetic_profile(_p_res)
+            _art_name_res = _all_art[_all_art["id"] == _wa_art_id]["name"].values
+            _art_name_str = _art_name_res[0] if len(_art_name_res) else "—"
+
+            _kv_rows = [
+                ("Cluster Detected",   _p_res.cluster or _scan_res["cluster_hint"]),
+                ("Monthly Turnover",   fmt_inr(_p_res.monthly_turnover) if _p_res.monthly_turnover else "—"),
+                ("Payment Latency",    f"{_p_res.payment_latency_days} d" if _p_res.payment_latency_days else "—"),
+                ("Invoice Value",      fmt_inr(_scan_res["invoice_value"])),
+                ("Buyer",              _scan_res["buyer"]),
+                ("Est. Credit Score",  str(_s_res.credit_score)),
+                ("Inserted Invoice #", _wa_inv_num or "—"),
+                ("Artisan Record",     _art_name_str),
+            ]
+            _kv_html = "".join(
+                f"<div class='wa-kv'>"
+                f"<span class='wa-kv-k'>{k}</span>"
+                f"<span class='wa-kv-v'>{v}</span>"
+                f"</div>"
+                for k, v in _kv_rows
+            )
+            st.markdown(
+                f"<div class='wa-ocr-panel'>"
+                f"<div class='wa-ocr-hdr'>Language Parser · Extracted Parameters</div>"
+                f"{_kv_html}"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                "<div style='font-size:.72rem;color:#475569;margin-top:.65rem;line-height:1.6'>"
+                "Switch to <b>📊 Credit Dashboard</b> and select <b>"
+                + _art_name_str
+                + "</b> — the invoice count and recalculated credit score "
+                "reflect the new record <b>instantly</b>."
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("<div style='height:.5rem'></div>", unsafe_allow_html=True)
+            if st.button("↺ Reset Sandbox", key="wa_reset_btn"):
+                for _k in ("wa_step", "wa_sample", "wa_art_id", "wa_inv_num"):
+                    st.session_state[_k] = None if _k != "wa_step" else 0
+                st.rerun()
 
 
 # ══════════════════════════════════════════════════════════════════════════════

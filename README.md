@@ -126,13 +126,29 @@ The pipeline is strictly linear with no circular imports. Each layer has a singl
 ┌─────────────────────────────────────────────────────────────────────┐
 │                           app.py                                    │
 │                                                                     │
-│   Streamlit Dashboard                                               │
+│   Streamlit Dashboard  (4 tabs for Bank Underwriter role)           │
+│                                                                     │
+│   📊 Credit Dashboard                                               │
 │   • Credit score gauge (300–850, CIBIL-scale colour bands)          │
-│   • Sub-score breakdown bar chart                                   │
+│   • Sub-score breakdown bar chart + 3 signal-decomposition cards    │
 │   • Monthly revenue consistency plot (actual vs seasonality-adj)    │
-│   • Invoice payment latency distribution                            │
-│   • Scheme recommendation card + confidence meter                   │
-│   • GST invoice table + Digital Khata ledger table                  │
+│   • Invoice payment latency distribution (5 buckets)                │
+│   • Scheme recommendation card + confidence meter + audit export    │
+│   • GST invoice table + Digital Khata ledger (most recent 30 rows)  │
+│                                                                     │
+│   🗣️ Smart Onboarding                                               │
+│   • Multilingual free-text parser (English / Hindi / Awadhi)        │
+│   • Instant credit estimate + scheme recommendation                 │
+│                                                                     │
+│   💬 WhatsApp Business Simulation Sandbox          ← NEW            │
+│   • Smartphone-styled WhatsApp chat UI                              │
+│   • Simulated OCR ingest of Khata bills & dispatch notes            │
+│   • Real-time SQLite write + cache bust → live dashboard update     │
+│   • Full audit trail of every WhatsApp ingest event                 │
+│                                                                     │
+│   🔒 Audit Logs  (Bank Underwriter only)                            │
+│   • Append-only event log: score views, parses, kit exports,        │
+│     WhatsApp ingests                                                │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -280,9 +296,11 @@ APL-Qualifiers-/
 │                           # at runtime (no in-memory cache), runs hard-gate
 │                           # checks, computes confidence scores, returns JSON.
 │
-├── app.py                  # Streamlit dashboard. Visualises credit scores,
-│                           # sub-score breakdowns, revenue trends, payment
-│                           # latency distributions, and scheme recommendations.
+├── app.py                  # Streamlit dashboard. Four tabs: Credit Dashboard
+│                           # (gauges, charts, underwriting suite), Smart
+│                           # Onboarding (multilingual parser), WhatsApp
+│                           # Business Simulation Sandbox (OCR ingest → live
+│                           # DB write), and Audit Logs. Auth-gated by role.
 │
 ├── main.py                 # CLI orchestration entry-point. Drops + rebuilds DB,
 │                           # scores all 50 artisans, prints a full Markdown
@@ -382,8 +400,8 @@ Open **http://localhost:8501** in your browser and sign in using one of the two 
 
 | Role | Username | Password | Access Level |
 | :--- | :--- | :--- | :--- |
-| **Bank Underwriter** | `manager` | `password123` | Full access — Credit Dashboard, Smart Onboarding, Audit Logs |
-| **NGO Facilitator** | `assistant` | `password123` | Restricted — Smart Onboarding tab only |
+| **Bank Underwriter** | `manager` | `password123` | Full access — Credit Dashboard, Smart Onboarding, **💬 WhatsApp Sandbox**, Audit Logs |
+| **NGO Facilitator** | `assistant` | `password123` | Restricted — Smart Onboarding + **💬 WhatsApp Sandbox** |
 
 The sidebar lets you filter artisans by cluster (Chowk / Aminabad) or search by name. Each artisan's page shows:
 
@@ -393,6 +411,13 @@ The sidebar lets you filter artisans by cluster (Chowk / Aminabad) or search by 
 - Invoice payment latency distribution (0–15d / 16–30d / 31–45d / 46–90d / 91+d)
 - Scheme recommendation card with confidence meter and eligibility gaps
 - Full GST invoice table and Digital Khata ledger (most recent 30 entries)
+
+Switch to the **💬 WhatsApp Sandbox** tab to simulate a live WhatsApp Business ingest:
+
+1. Pick any artisan from the dropdown.
+2. Select a sample scanned document (Khata bill or dispatch note).
+3. Click **🚀 Simulate OCR Ingest →** — the system runs the Vision → Language Parser → Credit Engine pipeline, writes a real invoice row to `gst_invoices`, and busts the dashboard cache.
+4. Return to **📊 Credit Dashboard**, select the same artisan — the invoice count and recalculated credit score are updated immediately.
 
 ### 6. Score a Single Artisan via the REPL
 
