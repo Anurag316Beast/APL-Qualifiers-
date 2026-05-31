@@ -40,77 +40,216 @@ st.set_page_config(
 # ──────────────────────────────────────────────────────────────────────────────
 # Global CSS — dark fintech theme
 # ──────────────────────────────────────────────────────────────────────────────
+_kc_dark = st.session_state.get("kc_dark", True)
+_theme_vars = """
+  --bg:#0c0e13; --surface:#14171e; --surface-2:#191d25; --surface-3:#1e222b;
+  --ink:#eef1f6; --ink-2:#b8bec9; --muted:#7e8693; --faint:#5c636f;
+  --border:#262b34; --border-2:#20242c; --grid:#222730;
+  --t-prime:#33b07e; --t-strong:#82c64f; --t-std:#e3b745; --t-watch:#f0993f; --t-sub:#ef6d6d;
+  --accent:#4f46d6;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 22px rgba(0,0,0,.35);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35);
+""" if _kc_dark else """
+  --bg:#f1f1ec; --surface:#ffffff; --surface-2:#faf9f6; --surface-3:#f4f3ef;
+  --ink:#15171c; --ink-2:#3c424d; --muted:#878d99; --faint:#aeb3bd;
+  --border:#e5e4de; --border-2:#eeede8; --grid:#ecebe5;
+  --t-prime:#157f55; --t-strong:#5d9b2f; --t-std:#c2901f; --t-watch:#d9772a; --t-sub:#c93f3f;
+  --accent:#4f46d6;
+  --shadow:0 1px 2px rgba(20,23,28,.04), 0 4px 16px rgba(20,23,28,.05);
+  --shadow-sm:0 1px 2px rgba(20,23,28,.05);
+"""
+
+# Inject CSS tokens (f-string for theme vars) + font import
+st.markdown(
+    f"<style>"
+    f"@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700"
+    f"&family=IBM+Plex+Mono:wght@400;500;600"
+    f"&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');"
+    f"body {{ {_theme_vars} }}"
+    f"html,body {{ font-family:'IBM Plex Sans','Noto Sans Devanagari',system-ui,sans-serif;"
+    f"-webkit-font-smoothing:antialiased; }}"
+    f"</style>",
+    unsafe_allow_html=True,
+)
+
+# Main component CSS (plain string — no f-string needed)
 st.markdown("""
 <style>
 /* ── Base ─────────────────────────────────────────────────────────── */
 [data-testid="stAppViewContainer"],
-[data-testid="stMain"] { background: #0E1117 !important; }
-.block-container         { padding-top: 1.4rem !important; padding-bottom: 1rem; max-width: 1440px; }
-html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
+[data-testid="stMain"] { background: var(--bg) !important; }
+.block-container { padding-top: 1.2rem !important; padding-bottom: 1rem; max-width: 1440px; }
 
 /* ── Sidebar ─────────────────────────────────────────────────────── */
-[data-testid="stSidebar"]          { background: #13161E !important; border-right: 1px solid #2E323D; }
-[data-testid="stSidebar"] *        { color: #94A3B8 !important; }
+[data-testid="stSidebar"]          { background: var(--surface) !important; border-right: 1px solid var(--border); }
+[data-testid="stSidebar"] *        { color: var(--ink-2) !important; font-family: 'IBM Plex Sans', system-ui, sans-serif !important; }
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
-[data-testid="stSidebar"] strong   { color: #F1F5F9 !important; }
+[data-testid="stSidebar"] strong   { color: var(--ink) !important; }
 [data-testid="stSidebar"] .stMarkdown p { font-size: 0.82rem; }
-[data-testid="stSidebar"] [data-testid="stMetricValue"]  { color: #38BDF8 !important; font-size: 1rem !important; }
-[data-testid="stSidebar"] [data-testid="stMetricLabel"]  { color: #64748B !important; }
+[data-testid="stSidebar"] [data-testid="stMetricValue"]  { color: var(--accent) !important; font-size: 1rem !important; font-family: 'IBM Plex Mono', monospace !important; }
+[data-testid="stSidebar"] [data-testid="stMetricLabel"]  { color: var(--muted) !important; }
 
 /* ── Tab strip ───────────────────────────────────────────────────── */
 .stTabs [data-baseweb="tab-list"]  {
     background: transparent !important;
-    border-bottom: 1px solid #2E323D !important;
+    border-bottom: 1px solid var(--border) !important;
     gap: 0.15rem;
     padding-bottom: 0;
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent !important;
-    color: #475569 !important;
+    color: var(--muted) !important;
     font-size: 0.8rem !important;
     font-weight: 600 !important;
     letter-spacing: 0.04em;
+    font-family: 'IBM Plex Sans', sans-serif !important;
     border-radius: 6px 6px 0 0 !important;
     padding: 0.55rem 1.1rem !important;
     border-bottom: 2px solid transparent !important;
 }
 .stTabs [aria-selected="true"] {
-    color: #38BDF8 !important;
-    border-bottom: 2px solid #38BDF8 !important;
-    background: rgba(56,189,248,0.04) !important;
+    color: var(--accent) !important;
+    border-bottom: 2px solid var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 5%, transparent) !important;
 }
 .stTabs [data-baseweb="tab-panel"] { padding-top: 1rem; }
 
 /* ── Progress bar ────────────────────────────────────────────────── */
-.stProgress > div                  { background: #2E323D !important; border-radius: 9999px; height: 8px !important; }
-.stProgress > div > div            { background: linear-gradient(90deg,#0EA5E9,#38BDF8) !important; border-radius: 9999px; }
+.stProgress > div                  { background: var(--surface-3) !important; border-radius: 9999px; height: 7px !important; }
+.stProgress > div > div            { background: var(--accent) !important; border-radius: 9999px; }
 
 /* ── Metric delta hide ───────────────────────────────────────────── */
 [data-testid="stMetricDelta"] svg  { display:none; }
 
 /* ── Expander ─────────────────────────────────────────────────────── */
-[data-testid="stExpander"]         { background: #13161E !important; border: 1px solid #2E323D !important; border-radius: 10px !important; }
-[data-testid="stExpander"] summary { color: #64748B !important; font-size: 0.78rem; }
+[data-testid="stExpander"]         { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 10px !important; }
+[data-testid="stExpander"] summary { color: var(--muted) !important; font-size: 0.78rem; }
 
 /* ── Code block ───────────────────────────────────────────────────── */
-.stCodeBlock code { font-size: 0.72rem !important; }
+.stCodeBlock code { font-size: 0.72rem !important; font-family: 'IBM Plex Mono', monospace !important; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    LAYOUT PRIMITIVES
 ───────────────────────────────────────────────────────────────────────── */
 .section-header {
     font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em;
-    text-transform: uppercase; color: #475569;
+    text-transform: uppercase; color: var(--muted);
     padding-bottom: 0.5rem; margin-bottom: 0.75rem;
-    border-bottom: 1px solid #2E323D;
+    border-bottom: 1px solid var(--border);
 }
 
 .fin-card {
-    background: #1A1D24; border: 1px solid #2E323D;
-    border-radius: 12px; padding: 1.25rem 1.5rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; padding: 1.25rem 1.5rem;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   KARIGAR CRED BRAND HEADER
+───────────────────────────────────────────────────────────────────────── */
+.kc-brand-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 11px;
+    margin-bottom: 14px; box-shadow: var(--shadow-sm);
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+.kc-brand-left { display: flex; align-items: center; gap: 11px; }
+.kc-brand-logo {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--accent); display: grid; place-items: center;
+    color: #fff; font-size: 17px; line-height: 1; box-shadow: var(--shadow-sm);
+}
+.kc-brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.2px; color: var(--ink); }
+.kc-brand-sub  { font-size: 10px; color: var(--muted); letter-spacing: 0.4px; text-transform: uppercase; margin-top: 1px; }
+.kc-env-pill {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11.5px; color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+}
+.kc-env-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--t-prime);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--t-prime) 22%, transparent);
+}
+.kc-env-sep { color: var(--faint); }
+.kc-header-right { display: flex; align-items: center; gap: 12px; }
+.kc-dark-toggle {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--ink-2); display: grid; place-items: center; cursor: pointer;
+    font-size: 14px;
+}
+.kc-user-chip { display: flex; align-items: center; gap: 9px; }
+.kc-user-av {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--surface-3); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 11px;
+    font-weight: 700; color: var(--ink-2); font-family: 'IBM Plex Mono', monospace;
+}
+.kc-user-name { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.1; }
+.kc-user-role { font-size: 10.5px; color: var(--muted); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   COHORT STRIP
+───────────────────────────────────────────────────────────────────────── */
+.kc-cohort {
+    display: grid; grid-template-columns: repeat(5, minmax(0,1fr)) minmax(200px,1.5fr);
+    gap: 1px; background: var(--border); border: 1px solid var(--border);
+    border-radius: 11px; overflow: hidden; margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+}
+.kc-cohort-cell { background: var(--surface); padding: 12px 15px; }
+.kc-cohort-v {
+    font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600;
+    letter-spacing: -0.5px; color: var(--ink);
+}
+.kc-cohort-k { font-size: 11px; font-weight: 600; color: var(--ink-2); margin-top: 3px; }
+.kc-cohort-s { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+.kc-cohort-cov { background: var(--surface); padding: 11px 15px; }
+.kc-cohort-cov-k { font-size: 11px; font-weight: 600; color: var(--ink-2); margin-bottom: 8px; }
+.kc-cov-track { height: 5px; border-radius: 3px; background: var(--surface-3); overflow: hidden; margin-bottom: 2px; }
+.kc-cov-fill  { height: 100%; border-radius: 3px; }
+.kc-cov-lab   { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-bottom: 6px; }
+.kc-cov-lab .mono { font-family: 'IBM Plex Mono', monospace; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SUBJECT BAR
+───────────────────────────────────────────────────────────────────────── */
+.kc-subject {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 6px 2px; margin-bottom: 12px;
+}
+.kc-subject-name {
+    font-size: 23px; font-weight: 700; letter-spacing: -0.5px; color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+.kc-subject-chips { display: flex; gap: 7px; margin-top: 6px; flex-wrap: wrap; }
+.kc-chip {
+    font-size: 11px; color: var(--ink-2); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 3px 9px; font-weight: 500;
+}
+.kc-band-badge {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600;
+    padding: 7px 14px; border: 1.5px solid; border-radius: 9px;
+    background: var(--surface); white-space: nowrap;
+}
+.kc-band-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   DASHBOARD HEADER BAR (legacy — now kc-subject)
+───────────────────────────────────────────────────────────────────────── */
+.dash-header {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; padding: 1rem 1.4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.9rem;
+}
+.dash-header-name { font-size: 1.25rem; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+.dash-header-sub  { font-size: 0.78rem; color: var(--muted); margin-top: 0.18rem; }
+.dash-header-right { display: flex; align-items: center; gap: 0.65rem; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    DASHBOARD HEADER BAR
@@ -133,21 +272,42 @@ html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
 /* ─────────────────────────────────────────────────────────────────────────
    EXECUTIVE SUMMARY MATRIX
 ───────────────────────────────────────────────────────────────────────── */
+.kc-exec {
+    display: grid; grid-template-columns: repeat(6,1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
+    border-radius: 11px; overflow: hidden; box-shadow: var(--shadow-sm);
+    margin-bottom: 14px;
+}
+.kc-exec-cell { background: var(--surface); padding: 13px 15px; position: relative; }
+.kc-exec-cell.accent::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--accent);
+}
+.kc-exec-k {
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: var(--muted);
+}
+.kc-exec-v {
+    font-family: 'IBM Plex Mono', monospace; font-size: 24px;
+    font-weight: 600; letter-spacing: -0.5px; margin-top: 7px; line-height: 1; color: var(--ink);
+}
+.kc-exec-s { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+/* legacy exec-metric kept for compat */
 .exec-metric {
-    background: linear-gradient(145deg,#1A1D24 0%,#22262F 100%);
-    border: 1px solid #2E323D; border-radius: 12px;
-    padding: 1.2rem 1.4rem; text-align: center; height: 100%;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; padding: 1.2rem 1.4rem; text-align: center; height: 100%;
 }
 .exec-metric .em-label {
     font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em;
-    text-transform: uppercase; color: #475569; margin-bottom: 0.55rem;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 0.55rem;
 }
 .exec-metric .em-value {
-    font-size: 2rem; font-weight: 900; line-height: 1;
-    letter-spacing: -0.03em;
+    font-family: 'IBM Plex Mono', monospace; font-size: 2rem; font-weight: 600;
+    line-height: 1; letter-spacing: -0.03em; color: var(--ink);
 }
 .exec-metric .em-sub {
-    font-size: 0.7rem; color: #475569; margin-top: 0.35rem;
+    font-size: 0.7rem; color: var(--muted); margin-top: 0.35rem;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -159,142 +319,234 @@ html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
     border-radius: 9999px; font-size: 0.65rem;
     font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
 }
-.risk-prime  { background: rgba(16,185,129,0.12); color: #10B981; border: 1px solid rgba(16,185,129,0.3); }
-.risk-near   { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.3); }
-.risk-sub    { background: rgba(245,158,11,0.12);  color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
-.risk-deep   { background: rgba(239,68,68,0.12);   color: #EF4444; border: 1px solid rgba(239,68,68,0.3); }
-.risk-invis  { background: rgba(129,140,248,0.12); color: #818CF8; border: 1px solid rgba(129,140,248,0.3); }
+.risk-prime  { background: color-mix(in srgb,var(--t-prime) 13%,transparent); color: var(--t-prime); border: 1px solid color-mix(in srgb,var(--t-prime) 30%,transparent); }
+.risk-strong { background: color-mix(in srgb,var(--t-strong) 13%,transparent); color: var(--t-strong); border: 1px solid color-mix(in srgb,var(--t-strong) 30%,transparent); }
+.risk-std    { background: color-mix(in srgb,var(--t-std) 13%,transparent);    color: var(--t-std);   border: 1px solid color-mix(in srgb,var(--t-std) 30%,transparent); }
+.risk-watch  { background: color-mix(in srgb,var(--t-watch) 13%,transparent);  color: var(--t-watch); border: 1px solid color-mix(in srgb,var(--t-watch) 30%,transparent); }
+.risk-sub    { background: color-mix(in srgb,var(--t-sub) 13%,transparent);    color: var(--t-sub);   border: 1px solid color-mix(in srgb,var(--t-sub) 30%,transparent); }
+/* legacy aliases */
+.risk-near   { background: color-mix(in srgb,var(--t-strong) 13%,transparent); color: var(--t-strong); border: 1px solid color-mix(in srgb,var(--t-strong) 30%,transparent); }
+.risk-deep   { background: color-mix(in srgb,var(--t-sub) 13%,transparent);    color: var(--t-sub);   border: 1px solid color-mix(in srgb,var(--t-sub) 30%,transparent); }
+.risk-invis  { background: color-mix(in srgb,var(--accent) 12%,transparent);   color: var(--accent);  border: 1px solid color-mix(in srgb,var(--accent) 28%,transparent); }
 
 /* ─────────────────────────────────────────────────────────────────────────
    SIGNAL DECOMPOSITION CARDS
 ───────────────────────────────────────────────────────────────────────── */
+.kc-sig {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 9px; padding: 14px; height: 100%;
+}
+.kc-sig-top { display: flex; justify-content: space-between; align-items: center; }
+.kc-sig-t   { font-size: 12px; font-weight: 600; color: var(--ink); }
+.kc-sig-w   {
+    font-size: 10.5px; color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: 1px 6px;
+}
+.kc-sig-score { display: flex; align-items: baseline; gap: 3px; margin: 11px 0 12px; }
+.kc-sig-v     { font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 600; letter-spacing: -1px; color: var(--ink); }
+.kc-sig-d     { font-size: 12px; color: var(--muted); }
+.kc-sig-grade {
+    margin-left: auto; font-size: 13px; font-weight: 700;
+    width: 24px; height: 24px; border-radius: 6px;
+    display: grid; place-items: center; color: #fff; align-self: center;
+}
+.kc-sig-grade[data-g="A"] { background: var(--t-prime); }
+.kc-sig-grade[data-g="B"] { background: var(--t-strong); }
+.kc-sig-grade[data-g="C"] { background: var(--t-std); }
+.kc-sig-grade[data-g="D"] { background: var(--t-watch); }
+.kc-sig-grade[data-g="E"] { background: var(--t-sub); }
+.kc-sig-rows { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--border-2); padding-top: 10px; }
+.kc-sig-r    { display: flex; justify-content: space-between; font-size: 11.5px; }
+.kc-sig-r span:first-child { color: var(--muted); }
+.kc-sig-r span:last-child  { color: var(--ink); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+/* legacy signal-card compat */
 .signal-card {
-    background: #13161E; border: 1px solid #2E323D;
-    border-radius: 10px; padding: 1rem 1.1rem; height: 100%;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 9px; padding: 14px; height: 100%;
 }
-.signal-label {
-    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.13em;
-    text-transform: uppercase; color: #475569; margin-bottom: 0.4rem;
-}
-.signal-score {
-    font-size: 2.2rem; font-weight: 900; line-height: 1;
-    letter-spacing: -0.03em; margin-bottom: 0.08rem;
-}
-.signal-denom { font-size: 0.85rem; color: #475569; }
-.signal-weight { font-size: 0.68rem; color: #374151; margin-bottom: 0.6rem; }
+.signal-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+.signal-score { font-family: 'IBM Plex Mono', monospace; font-size: 2rem; font-weight: 600; line-height: 1; letter-spacing: -0.03em; margin-bottom: 0.08rem; color: var(--ink); }
+.signal-denom { font-size: 0.85rem; color: var(--muted); }
+.signal-weight { font-size: 0.68rem; color: var(--faint); margin-bottom: 0.6rem; }
 .signal-kv {
-    display: flex; justify-content: space-between;
-    font-size: 0.76rem; color: #64748B;
-    padding: 0.28rem 0; border-bottom: 1px solid #1E2229;
+    display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--muted);
+    padding: 0.28rem 0; border-bottom: 1px solid var(--border-2);
 }
 .signal-kv:last-of-type { border-bottom: none; }
-.signal-kv-val { font-weight: 700; }
-.sig-grade {
-    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; padding: 0.12rem 0.45rem;
-    border-radius: 4px;
-}
+.signal-kv-val { font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
+.sig-grade { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.12rem 0.45rem; border-radius: 4px; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    UNDERWRITING SUITE (right column)
 ───────────────────────────────────────────────────────────────────────── */
+.kc-uw-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; box-shadow: var(--shadow); padding: 15px;
+    display: flex; flex-direction: column; gap: 13px;
+}
+.kc-uw-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--ink-2);
+}
+.kc-uw-tag {
+    font-size: 11px; font-weight: 600; border: 1.5px solid;
+    border-radius: 6px; padding: 2px 8px;
+}
+.kc-scheme-block {
+    border-radius: 10px; padding: 15px; overflow: hidden;
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+.kc-scheme-eyebrow { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--accent); }
+.kc-scheme-name  { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; margin-top: 5px; color: var(--ink); }
+.kc-scheme-amt   { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600; margin-top: 7px; color: var(--ink); }
+.kc-scheme-amt span { color: var(--muted); font-size: 13px; }
+.kc-scheme-card  { font-size: 11.5px; color: var(--muted); margin-top: 7px; }
+.kc-conf-row     { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+.kc-conf-row span:last-child { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+.kc-conf-track   { height: 7px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+.kc-conf-fill    { height: 100%; background: var(--accent); border-radius: 4px; }
+.kc-uw-sec       { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.kc-alt          { display: flex; align-items: center; gap: 9px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 5px; }
+.kc-alt-dot      { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.kc-alt-name     { font-size: 12.5px; font-weight: 500; flex: 1; color: var(--ink-2); }
+.kc-alt-fit      { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.kc-callouts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.kc-callout      { border-radius: 9px; padding: 11px; border: 1px solid; }
+.kc-callout--risk { background: color-mix(in srgb,var(--t-watch) 8%,var(--surface)); border-color: color-mix(in srgb,var(--t-watch) 28%,var(--border)); }
+.kc-callout--gap  { background: color-mix(in srgb,var(--t-sub) 7%,var(--surface));   border-color: color-mix(in srgb,var(--t-sub) 26%,var(--border)); }
+.kc-callout-hd   { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: var(--ink-2); display: flex; justify-content: space-between; margin-bottom: 7px; }
+.kc-callout-hd em { font-style: normal; font-family: 'IBM Plex Mono', monospace; }
+.kc-callout--risk .kc-callout-hd em { color: var(--t-watch); }
+.kc-callout--gap  .kc-callout-hd em { color: var(--t-sub); }
+.kc-callout-row  { font-size: 11px; color: var(--ink-2); line-height: 1.4; padding: 3px 0; border-top: 1px solid var(--border-2); }
+.kc-callout-row:first-of-type { border-top: none; }
+.kc-callout-empty { font-size: 11px; color: var(--muted); font-style: italic; }
+.kc-export-btn   {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; padding: 10px; background: var(--accent); color: #fff;
+    border: none; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+/* legacy compat */
 .scheme-block {
-    background: linear-gradient(135deg,rgba(16,185,129,0.09) 0%,rgba(16,185,129,0.03) 100%);
-    border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;
-    padding: 1.3rem 1.5rem;
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+    border-radius: 10px; padding: 1.2rem 1.4rem;
 }
-.scheme-amount {
-    font-size: 2.2rem; font-weight: 900; color: #10B981;
-    line-height: 1; letter-spacing: -0.03em;
-}
-.flag-item {
-    background: rgba(245,158,11,0.07); border-left: 3px solid #F59E0B;
-    border-radius: 0 6px 6px 0; padding: 0.42rem 0.75rem;
-    margin-bottom: 0.3rem; font-size: 0.78rem; color: #FCD34D;
-}
-.gap-item {
-    background: rgba(239,68,68,0.07); border-left: 3px solid #EF4444;
-    border-radius: 0 6px 6px 0; padding: 0.42rem 0.75rem;
-    margin-bottom: 0.3rem; font-size: 0.78rem; color: #FCA5A5;
-}
-.alt-row {
-    font-size: 0.78rem; color: #64748B; padding: 0.3rem 0;
-    border-bottom: 1px solid #1E2229;
-}
-.underwrite-kv {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.35rem 0; border-bottom: 1px solid #1E2229;
-    font-size: 0.79rem;
-}
-.underwrite-kv-key { color: #64748B; }
-.underwrite-kv-val { font-weight: 700; color: #F1F5F9; }
+.scheme-amount { font-family: 'IBM Plex Mono', monospace; font-size: 2rem; font-weight: 600; color: var(--t-prime); line-height: 1; letter-spacing: -0.03em; }
+.flag-item { background: color-mix(in srgb,var(--t-watch) 8%,transparent); border-left: 3px solid var(--t-watch); border-radius: 0 6px 6px 0; padding: 0.42rem 0.75rem; margin-bottom: 0.3rem; font-size: 0.78rem; color: var(--t-watch); }
+.gap-item  { background: color-mix(in srgb,var(--t-sub) 8%,transparent);   border-left: 3px solid var(--t-sub);   border-radius: 0 6px 6px 0; padding: 0.42rem 0.75rem; margin-bottom: 0.3rem; font-size: 0.78rem; color: var(--t-sub); }
+.alt-row { font-size: 0.78rem; color: var(--muted); padding: 0.3rem 0; border-bottom: 1px solid var(--border-2); }
+.underwrite-kv { display: flex; justify-content: space-between; align-items: center; padding: 0.35rem 0; border-bottom: 1px solid var(--border-2); font-size: 0.79rem; }
+.underwrite-kv-key { color: var(--muted); }
+.underwrite-kv-val { font-weight: 600; color: var(--ink); font-family: 'IBM Plex Mono', monospace; }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   ONBOARDING (dark)
+   SMART ONBOARDING — KarigarCred Field Assistant
 ───────────────────────────────────────────────────────────────────────── */
 .ob-sample-label {
     font-size: 0.6rem; font-weight: 700; letter-spacing: 0.13em;
-    text-transform: uppercase; color: #475569;
+    text-transform: uppercase; color: var(--muted);
     margin-bottom: 0.5rem; margin-top: 0.2rem;
 }
 .ob-card {
-    background: #1A1D24; border: 1px solid #2E323D;
-    border-radius: 12px; padding: 1.4rem 1.6rem; height: 100%;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 13px; overflow: hidden;
 }
+.ob-card-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-bottom: 1px solid var(--border-2);
+}
+.ob-card-hd-t {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: var(--ink-2);
+}
+.ob-card-hd-b { font-size: 10.5px; color: var(--t-prime); font-weight: 600; }
 .ob-card-title {
     font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em;
-    text-transform: uppercase; color: #475569;
-    padding-bottom: 0.5rem; margin-bottom: 0.8rem;
-    border-bottom: 1px solid #2E323D;
+    text-transform: uppercase; color: var(--muted);
+    padding: 12px 14px 0; margin-bottom: 0;
 }
+.ob-param {
+    display: flex; align-items: center; gap: 11px;
+    padding: 11px 14px; border-bottom: 1px solid var(--border-2);
+}
+.ob-param:last-child { border-bottom: none; }
 .ob-param-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 0.58rem 0; border-bottom: 1px solid #1E2229;
+    padding: 0.58rem 0.875rem; border-bottom: 1px solid var(--border-2);
     font-size: 0.84rem;
 }
 .ob-param-row:last-child { border-bottom: none; }
-.ob-param-key  { color: #64748B; }
-.ob-param-val  { font-weight: 700; color: #F1F5F9; text-align: right; }
-.ob-param-val.detected { color: #10B981; }
-.ob-param-val.missing  { color: #374151; font-style: italic; font-weight: 400; }
-.ob-score-big  { font-size: 3rem; font-weight: 900; text-align: center; line-height: 1.1; }
+.ob-param-key  { font-size: 11px; color: var(--muted); }
+.ob-param-val  { font-size: 14px; font-weight: 600; color: var(--ink); text-align: right; margin-top: 1px; }
+.ob-param-val.detected { color: var(--t-prime); }
+.ob-param-val.missing  { color: var(--faint); font-style: italic; font-weight: 400; }
+.ob-check-ok { width:22px; height:22px; border-radius:6px; display:grid; place-items:center; flex:none; background:color-mix(in srgb,var(--t-prime) 14%,transparent); color:var(--t-prime); font-size:13px; }
+.ob-check-no { width:22px; height:22px; border-radius:6px; display:grid; place-items:center; flex:none; background:var(--surface-3); color:var(--faint); font-size:13px; }
+.ob-score-big  { font-family: 'IBM Plex Mono', monospace; font-size: 3rem; font-weight: 600; text-align: center; line-height: 1.1; letter-spacing: -1px; }
 .ob-flag-row {
-    background: rgba(245,158,11,0.07); border-left: 3px solid #F59E0B;
-    border-radius: 0 6px 6px 0; padding: 0.38rem 0.7rem;
-    margin-bottom: 0.28rem; font-size: 0.77rem; color: #FCD34D;
+    display: flex; gap: 9px; align-items: flex-start;
+    padding: 5px 14px; font-size: 12px; color: var(--ink-2); line-height: 1.4;
+    border-top: 1px solid var(--border-2);
 }
+.ob-flag-row:first-of-type { border-top: none; }
+.ob-co-risk { width:16px; height:16px; border-radius:5px; flex:none; display:grid; place-items:center; margin-top:1px; font-size:9px; font-weight:700; color:#fff; background:var(--t-watch); }
+.ob-co-gap  { width:16px; height:16px; border-radius:5px; flex:none; display:grid; place-items:center; margin-top:1px; font-size:9px; font-weight:700; color:#fff; background:var(--t-sub); }
+.ob-co-ok   { width:16px; height:16px; border-radius:5px; flex:none; display:grid; place-items:center; margin-top:1px; font-size:9px; font-weight:700; color:#fff; background:var(--t-prime); }
 .ob-gap-row {
-    background: rgba(239,68,68,0.07); border-left: 3px solid #EF4444;
-    border-radius: 0 6px 6px 0; padding: 0.38rem 0.7rem;
-    margin-bottom: 0.28rem; font-size: 0.77rem; color: #FCA5A5;
+    display: flex; gap: 9px; align-items: flex-start;
+    padding: 5px 14px; font-size: 12px; color: var(--ink-2); line-height: 1.4;
+    border-top: 1px solid var(--border-2);
 }
 .ob-processing {
     display: flex; align-items: center; gap: 0.8rem;
-    background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.2);
-    border-radius: 10px; padding: 0.85rem 1.3rem;
-    font-size: 0.86rem; color: #38BDF8; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; padding: 0.85rem 1.3rem;
+    font-size: 0.86rem; color: var(--ink-2); font-weight: 500;
 }
 .ob-pulse {
     width: 10px; height: 10px; border-radius: 50%;
-    background: #38BDF8; flex-shrink: 0;
-    animation: ob-anim 1.2s ease-in-out infinite;
+    background: var(--accent); flex-shrink: 0;
+    animation: ob-anim 1s infinite;
 }
 @keyframes ob-anim {
-    0%,100% { transform: scale(1); opacity: 1; }
-    50%      { transform: scale(1.7); opacity: 0.3; }
+    0%,100% { opacity: 0.3; transform: scale(0.8); }
+    50%      { opacity: 1;   transform: scale(1.1); }
 }
+.ob-lang-seg {
+    display: flex; gap: 4px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 11px; padding: 4px;
+    margin-bottom: 12px;
+}
+.ob-lang-btn {
+    flex: 1; padding: 9px 4px; font-size: 13px; font-weight: 600;
+    border: none; background: none; color: var(--muted); border-radius: 8px;
+    cursor: pointer; font-family: 'IBM Plex Sans', 'Noto Sans Devanagari', sans-serif;
+    transition: background 0.15s;
+}
+.ob-lang-btn.on { background: var(--accent); color: #fff; }
+.ob-chip-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 10px; }
+.ob-chip {
+    font-size: 12px; font-weight: 500; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 11px; cursor: pointer;
+}
+.ob-chip.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb,var(--accent) 8%,var(--surface)); }
 
 /* ─────────────────────────────────────────────────────────────────────────
    EMPTY STATE
 ───────────────────────────────────────────────────────────────────────── */
 .empty-state {
     text-align: center; padding: 3.5rem 1.5rem;
-    background: #13161E; border: 1px dashed #2E323D;
+    background: var(--surface); border: 1px dashed var(--border);
     border-radius: 12px; margin: 0.5rem 0;
 }
-.empty-icon  { font-size: 2.2rem; color: #2E323D; margin-bottom: 0.7rem; }
-.empty-title { font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.4rem; }
-.empty-sub   { font-size: 0.8rem; color: #374151; max-width: 360px; margin: 0 auto; line-height: 1.55; }
+.empty-icon  { font-size: 2.2rem; color: var(--faint); margin-bottom: 0.7rem; }
+.empty-title { font-size: 0.95rem; font-weight: 700; color: var(--muted); margin-bottom: 0.4rem; }
+.empty-sub   { font-size: 0.8rem; color: var(--faint); max-width: 360px; margin: 0 auto; line-height: 1.55; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    AUTH — LOGIN PAGE
@@ -304,33 +556,42 @@ html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
     align-items: center; padding: 3rem 1rem;
 }
 .auth-logo-row {
-    font-size: 2.4rem; font-weight: 900; color: #38BDF8;
-    letter-spacing: -0.04em; margin-bottom: 0.3rem; text-align: center;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 0.6rem;
+}
+.auth-logo-mark {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--accent); display: grid; place-items: center;
+    color: #fff; font-size: 22px; box-shadow: var(--shadow-sm);
+}
+.auth-brand-name {
+    font-size: 1.9rem; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.04em;
 }
 .auth-title-row {
-    font-size: 1.15rem; font-weight: 700; color: #F1F5F9;
+    font-size: 1.05rem; font-weight: 600; color: var(--ink-2);
     text-align: center; margin-bottom: 0.25rem;
 }
 .auth-sub-row {
-    font-size: 0.78rem; color: #475569; text-align: center; margin-bottom: 2rem;
+    font-size: 0.78rem; color: var(--muted); text-align: center; margin-bottom: 2rem;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
    AUTH — SIDEBAR BANNER
 ───────────────────────────────────────────────────────────────────────── */
 .auth-banner {
-    background: linear-gradient(135deg,rgba(56,189,248,0.10) 0%,rgba(56,189,248,0.03) 100%);
-    border: 1px solid rgba(56,189,248,0.22); border-radius: 10px;
-    padding: 0.85rem 1rem; margin-bottom: 0.6rem;
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+    border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.6rem;
 }
 .auth-banner-name {
     font-size: 0.9rem !important; font-weight: 700 !important;
-    color: #F1F5F9 !important; margin-bottom: 0.2rem;
+    color: var(--ink) !important; margin-bottom: 0.2rem;
 }
 .auth-banner-tier {
     font-size: 0.62rem !important; font-weight: 700 !important;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: #38BDF8 !important;
+    color: var(--accent) !important;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -338,31 +599,28 @@ html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
 ───────────────────────────────────────────────────────────────────────── */
 .perm-error {
     text-align: center; padding: 4rem 2rem;
-    background: rgba(239,68,68,0.04);
-    border: 1px dashed rgba(239,68,68,0.22); border-radius: 14px;
+    background: color-mix(in srgb,var(--t-sub) 4%,var(--surface));
+    border: 1px dashed color-mix(in srgb,var(--t-sub) 22%,var(--border)); border-radius: 14px;
     margin: 1.5rem 0;
 }
-.perm-error-icon  { font-size: 2.4rem; color: #EF4444; margin-bottom: 0.8rem; }
-.perm-error-title { font-size: 1rem; font-weight: 700; color: #FCA5A5; margin-bottom: 0.45rem; }
-.perm-error-sub   {
-    font-size: 0.82rem; color: #7F1D1D; max-width: 400px;
-    margin: 0 auto; line-height: 1.6;
-}
+.perm-error-icon  { font-size: 2.4rem; color: var(--t-sub); margin-bottom: 0.8rem; }
+.perm-error-title { font-size: 1rem; font-weight: 700; color: var(--t-sub); margin-bottom: 0.45rem; }
+.perm-error-sub   { font-size: 0.82rem; color: var(--muted); max-width: 400px; margin: 0 auto; line-height: 1.6; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    AUDIT LOG
 ───────────────────────────────────────────────────────────────────────── */
 .audit-stat {
-    background: #1A1D24; border: 1px solid #2E323D;
+    background: var(--surface); border: 1px solid var(--border);
     border-radius: 10px; padding: 1rem 1.2rem; text-align: center;
 }
 .audit-stat-val {
-    font-size: 1.8rem; font-weight: 900; color: #38BDF8;
-    line-height: 1; letter-spacing: -0.03em;
+    font-family: 'IBM Plex Mono', monospace; font-size: 1.8rem; font-weight: 600;
+    color: var(--accent); line-height: 1; letter-spacing: -0.03em;
 }
 .audit-stat-lbl {
     font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em;
-    text-transform: uppercase; color: #475569; margin-top: 0.3rem;
+    text-transform: uppercase; color: var(--muted); margin-top: 0.3rem;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -394,6 +652,25 @@ html, body               { font-family: 'Inter', 'Segoe UI', sans-serif; }
 .wa-kv:last-child { border-bottom:none; }
 .wa-kv-k { color:#64748B; }
 .wa-kv-v { font-weight:700; color:#F1F5F9; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ARTISAN DIRECTORY (sidebar)
+───────────────────────────────────────────────────────────────────────── */
+.kc-dir-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 9px; border-radius: 8px; border: 1px solid transparent;
+    background: none; cursor: pointer; text-align: left; width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif; margin-bottom: 2px;
+}
+.kc-dir-row:hover { background: var(--surface-2); }
+.kc-dir-row.active {
+    background: var(--surface-2); border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+.kc-dir-bar { width: 3px; height: 30px; border-radius: 2px; flex: none; }
+.kc-dir-name { display: block; font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kc-dir-meta { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+.kc-dir-score { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; }
 
 /* ── Hide Streamlit chrome ───────────────────────────────────────── */
 #MainMenu { visibility: hidden; }
@@ -484,9 +761,12 @@ def _render_login() -> None:
     with center:
         st.markdown("""
         <div class='auth-wrap'>
-            <div class='auth-logo-row'>⬡ Artisan Credit</div>
-            <div class='auth-title-row'>Secure Financial Intelligence Portal</div>
-            <div class='auth-sub-row'>Lucknow Textile Cluster &nbsp;·&nbsp; Alternative Credit System</div>
+            <div class='auth-logo-row'>
+                <div class='auth-logo-mark'>◈</div>
+                <div class='auth-brand-name'>KarigarCred</div>
+            </div>
+            <div class='auth-title-row'>Institutional Underwriting Terminal</div>
+            <div class='auth-sub-row'>Lucknow Textile Cluster &nbsp;·&nbsp; Alternative Credit Scoring System</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -563,6 +843,8 @@ TRANSLATIONS: dict[str, dict] = {
         "none_label":        "No issues identified",
         "await_title":       "Awaiting Artisan Ingest",
         "await_sub":         "Load a sample template or type a trade statement above to begin multilingual extraction.",
+        "push":              "Push to underwriter",
+        "pushed":            "Sent to underwriting queue",
         "bands": {
             "Prime":            "Prime",
             "Near-Prime":       "Near-Prime",
@@ -611,6 +893,8 @@ TRANSLATIONS: dict[str, dict] = {
         "none_label":        "कोई समस्या नहीं",
         "await_title":       "प्रतीक्षा में",
         "await_sub":         "ऊपर नमूना लोड करें या विवरण दर्ज करें।",
+        "push":              "अंडरराइटर को भेजें",
+        "pushed":            "अंडरराइटिंग कतार में भेजा",
         "bands": {
             "Prime":            "उत्तम",
             "Near-Prime":       "लगभग उत्तम",
@@ -659,6 +943,8 @@ TRANSLATIONS: dict[str, dict] = {
         "none_label":        "कउनो दिक्कत नाहीं",
         "await_title":       "प्रतीक्षा मा",
         "await_sub":         "ऊपर नमूना लोड करव या बिबरन लिखव।",
+        "push":              "अंडरराइटर के भेजीं",
+        "pushed":            "अंडरराइटिंग कतार मा भेजल",
         "bands": {
             "Prime":            "उत्तम",
             "Near-Prime":       "लगभग उत्तम",
@@ -758,12 +1044,37 @@ def fmt_inr(v: float) -> str:
 
 
 def score_meta(s: int) -> tuple[str, str, str]:
-    """Returns (label, badge-css-class, hex-color)."""
-    if s >= 750: return "Prime",            "risk-prime", "#10B981"
-    if s >= 650: return "Near-Prime",       "risk-near",  "#38BDF8"
-    if s >= 550: return "Subprime",         "risk-sub",   "#F59E0B"
-    if s >= 450: return "Deep Subprime",    "risk-deep",  "#EF4444"
-    return               "Credit Invisible","risk-invis",  "#818CF8"
+    """Returns (label, badge-css-class, hex-color) for 5-tier KarigarCred bands."""
+    if _kc_dark:
+        if s >= 760: return "Prime",     "risk-prime",  "#33b07e"
+        if s >= 720: return "Strong",    "risk-strong", "#82c64f"
+        if s >= 660: return "Standard",  "risk-std",    "#e3b745"
+        if s >= 580: return "Watch",     "risk-watch",  "#f0993f"
+        return               "Sub-prime","risk-sub",    "#ef6d6d"
+    else:
+        if s >= 760: return "Prime",     "risk-prime",  "#157f55"
+        if s >= 720: return "Strong",    "risk-strong", "#5d9b2f"
+        if s >= 660: return "Standard",  "risk-std",    "#c2901f"
+        if s >= 580: return "Watch",     "risk-watch",  "#d9772a"
+        return               "Sub-prime","risk-sub",    "#c93f3f"
+
+
+def score_tier(s: int) -> str:
+    """Returns T1–T5 tier string for band badge."""
+    if s >= 760: return "T1"
+    if s >= 720: return "T2"
+    if s >= 660: return "T3"
+    if s >= 580: return "T4"
+    return "T5"
+
+
+def sig_grade(v: float) -> str:
+    """A/B/C/D/E letter grade for signal scores /100."""
+    if v >= 82: return "A"
+    if v >= 70: return "B"
+    if v >= 58: return "C"
+    if v >= 46: return "D"
+    return "E"
 
 
 def _build_synthetic_profile(parsed: ParsedStatement) -> CreditProfile:
@@ -948,39 +1259,45 @@ def _wa_insert_invoice(artisan_id: int, buyer: str, value: float, overdue_days: 
 # Dark-mode Plotly charts
 # ──────────────────────────────────────────────────────────────────────────────
 
+_CHART_BG    = "rgba(0,0,0,0)"
+_CHART_FONT  = "#b8bec9" if _kc_dark else "#3c424d"
+_CHART_GRID  = "#222730" if _kc_dark else "#ecebe5"
+_CHART_TICK  = "#5c636f" if _kc_dark else "#878d99"
+_ACCENT_HEX  = "#4f46d6"
 _DARK_LAYOUT = dict(
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter,sans-serif", color="#94A3B8"),
+    paper_bgcolor=_CHART_BG,
+    plot_bgcolor=_CHART_BG,
+    font=dict(family="IBM Plex Sans,system-ui,sans-serif", color=_CHART_FONT),
 )
 _AXIS_STYLE = dict(
-    showgrid=True, gridcolor="#1E2229",
-    tickfont=dict(size=9, color="#64748B"),
-    linecolor="#2E323D", tickcolor="#2E323D",
+    showgrid=True, gridcolor=_CHART_GRID,
+    tickfont=dict(size=9, color=_CHART_TICK, family="IBM Plex Mono,monospace"),
+    linecolor=_CHART_GRID, tickcolor=_CHART_GRID,
 )
 
 
 def chart_gauge(score: int, color: str) -> go.Figure:
+    sub_alpha = "22"
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=score,
-        number={"font": {"size": 48, "color": color, "family": "Inter,sans-serif"}},
+        number={"font": {"size": 48, "color": color, "family": "IBM Plex Mono,monospace"}},
         gauge={
             "axis": {
                 "range": [300, 850],
-                "tickvals": [300, 450, 550, 650, 750, 850],
-                "tickfont": {"size": 8, "color": "#475569"},
-                "tickcolor": "#2E323D",
+                "tickvals": [300, 580, 660, 720, 760, 850],
+                "tickfont": {"size": 8, "color": _CHART_TICK, "family": "IBM Plex Mono,monospace"},
+                "tickcolor": _CHART_GRID,
             },
             "bar":       {"color": color, "thickness": 0.22},
             "bgcolor":   "rgba(0,0,0,0)",
             "borderwidth": 0,
             "steps": [
-                {"range": [300, 450], "color": "rgba(239,68,68,0.10)"},
-                {"range": [450, 550], "color": "rgba(245,158,11,0.10)"},
-                {"range": [550, 650], "color": "rgba(234,179,8,0.10)"},
-                {"range": [650, 750], "color": "rgba(56,189,248,0.10)"},
-                {"range": [750, 850], "color": "rgba(16,185,129,0.10)"},
+                {"range": [300, 580], "color": f"rgba(239,109,109,0.10)"},
+                {"range": [580, 660], "color": f"rgba(240,153,63,0.10)"},
+                {"range": [660, 720], "color": f"rgba(227,183,69,0.10)"},
+                {"range": [720, 760], "color": f"rgba(130,198,79,0.10)"},
+                {"range": [760, 850], "color": f"rgba(51,176,126,0.10)"},
             ],
         },
     ))
@@ -994,26 +1311,27 @@ def chart_gauge(score: int, color: str) -> go.Figure:
 def chart_subscores(profile: CreditProfile) -> go.Figure:
     cats   = ["Relationship (30%)", "Fulfillment (40%)", "Cash Flow (30%)"]
     vals   = [profile.relationship_score, profile.fulfillment_score, profile.cashflow_score]
-    colors = ["#38BDF8", "#10B981", "#818CF8"]
+    band_col = score_meta(profile.credit_score)[2]
+    colors   = [band_col, band_col, band_col]
 
     fig = go.Figure(go.Bar(
         y=cats, x=vals, orientation="h",
         marker_color=colors,
         text=[f"{v:.0f}" for v in vals],
         textposition="inside", insidetextanchor="middle",
-        textfont={"size": 11, "color": "white", "family": "Inter,sans-serif"},
+        textfont={"size": 11, "color": "white", "family": "IBM Plex Mono,monospace"},
         hovertemplate="%{y}: %{x:.1f}/100<extra></extra>",
     ))
     fig.add_vline(
         x=profile.composite_raw, line_dash="dot",
-        line_color="#94A3B8", line_width=1.5,
+        line_color=_CHART_FONT, line_width=1.5,
         annotation_text=f"  {profile.composite_raw:.0f}",
         annotation_position="top right",
-        annotation_font_size=9, annotation_font_color="#94A3B8",
+        annotation_font_size=9, annotation_font_color=_CHART_FONT,
     )
     fig.update_layout(
         xaxis=dict(range=[0, 100], title="", **_AXIS_STYLE),
-        yaxis=dict(showgrid=False, tickfont={"size": 9, "color": "#94A3B8"}),
+        yaxis=dict(showgrid=False, tickfont={"size": 9, "color": _CHART_FONT}),
         showlegend=False,
         height=190,
         margin=dict(t=10, b=25, l=10, r=55),
@@ -1036,14 +1354,14 @@ def chart_revenue(invoices: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Scatter(
         x=m_actual["year_month"], y=m_actual["invoice_value"],
         mode="lines+markers", name="Actual Revenue",
-        line=dict(color="#38BDF8", width=2.5), marker=dict(size=4),
-        fill="tozeroy", fillcolor="rgba(56,189,248,0.06)",
+        line=dict(color=_ACCENT_HEX, width=2.5), marker=dict(size=4),
+        fill="tozeroy", fillcolor=f"rgba(79,70,214,0.08)",
         hovertemplate="%{x}: ₹%{y:,.0f}<extra>Actual</extra>",
     ))
     fig.add_trace(go.Scatter(
         x=m_adj["year_month"], y=m_adj["adj_value"],
         mode="lines", name="Seasonality-Adjusted",
-        line=dict(color="#475569", width=1.5, dash="dot"),
+        line=dict(color=_CHART_TICK, width=1.5, dash="dot"),
         hovertemplate="%{x}: ₹%{y:,.0f}<extra>Adjusted</extra>",
     ))
     fig.update_layout(
@@ -1064,17 +1382,20 @@ def chart_revenue(invoices: pd.DataFrame) -> go.Figure:
 def chart_latency(invoices: pd.DataFrame) -> go.Figure:
     total  = len(invoices)
     od     = invoices["overdue_days"]
-    labels = ["0–15d\nPrompt", "16–30d\nStandard", "31–45d\nLate",
-              "46–90d\nOverdue", "91+d\nDefault"]
+    labels = ["0–30d\nPrompt", "31–60d\nStandard", "61–90d\nLate",
+              "91–120d\nOverdue", "120+d\nDefault"]
     counts = [
-        int((od <= 15).sum()),
-        int(((od > 15) & (od <= 30)).sum()),
-        int(((od > 30) & (od <= 45)).sum()),
-        int(((od > 45) & (od <= 90)).sum()),
-        int((od > 90).sum()),
+        int((od <= 30).sum()),
+        int(((od > 30) & (od <= 60)).sum()),
+        int(((od > 60) & (od <= 90)).sum()),
+        int(((od > 90) & (od <= 120)).sum()),
+        int((od > 120).sum()),
     ]
     pcts   = [f"{c / total:.0%}" for c in counts]
-    colors = ["#10B981", "#38BDF8", "#F59E0B", "#F97316", "#EF4444"]
+    if _kc_dark:
+        colors = ["#33b07e", "#82c64f", "#e3b745", "#f0993f", "#ef6d6d"]
+    else:
+        colors = ["#157f55", "#5d9b2f", "#c2901f", "#d9772a", "#c93f3f"]
 
     fig = go.Figure(go.Bar(
         x=labels, y=counts, marker_color=colors,
@@ -1128,19 +1449,35 @@ _is_manager   = st.session_state["auth_is_manager"]
 # ──────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    # ── Account status banner ─────────────────────────────────────────────────
+    # ── KarigarCred brand + account banner ──────────────────────────────────
     st.markdown(
-        f"""<div class='auth-banner'>
-        <div class='auth-banner-name'>{_display_name}</div>
-        <div class='auth-banner-tier'>[{_role_tier}]</div>
+        f"""<div style='display:flex;align-items:center;gap:10px;padding:6px 2px 10px'>
+            <div style='width:32px;height:32px;border-radius:9px;background:var(--accent);
+                        display:grid;place-items:center;color:#fff;font-size:16px;flex:none'>◈</div>
+            <div>
+              <div style='font-weight:700;font-size:15px;color:var(--ink)'>KarigarCred</div>
+              <div style='font-size:10px;color:var(--muted);letter-spacing:.3px;text-transform:uppercase'>Field Terminal</div>
+            </div>
+        </div>
+        <div class='auth-banner'>
+            <div class='auth-banner-name'>{_display_name}</div>
+            <div class='auth-banner-tier'>{_role_tier}</div>
         </div>""",
         unsafe_allow_html=True,
     )
 
-    if st.button("Log Out", key="logout_btn", use_container_width=True):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+    _sb_col1, _sb_col2 = st.columns([3, 1])
+    with _sb_col1:
+        if st.button("Log Out", key="logout_btn", use_container_width=True):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+    with _sb_col2:
+        _dm_icon = "☀" if _kc_dark else "☾"
+        if st.button(_dm_icon, key="dark_mode_btn", use_container_width=True,
+                     help="Toggle light/dark mode"):
+            st.session_state["kc_dark"] = not _kc_dark
+            st.rerun()
 
     st.divider()
 
@@ -1154,11 +1491,14 @@ with st.sidebar:
 
     if _is_manager:
         st.divider()
-        st.markdown("## Artisan Directory")
+        st.markdown(
+            "<div style='font-size:12px;font-weight:600;text-transform:uppercase;"
+            "letter-spacing:.6px;color:var(--muted);padding:2px 0 8px'>Artisan Directory</div>",
+            unsafe_allow_html=True,
+        )
         all_artisans = load_artisan_list()
-        st.caption(f"{len(all_artisans)} artisans · Lucknow")
 
-        search      = st.text_input("", placeholder="Search by name…",
+        search      = st.text_input("", placeholder="Name, craft, or ID…",
                                     label_visibility="collapsed")
         cluster_opt = st.radio("Cluster", ["All", "Chowk", "Aminabad"], horizontal=True)
 
@@ -1182,10 +1522,17 @@ with st.sidebar:
         artisan_id   = int(chosen_row["id"])
 
         st.divider()
-        st.markdown(f"**{chosen_row['name']}**")
+        _art_score_preview = load_profile(artisan_id).credit_score
+        _art_band_lbl, _, _art_band_col = score_meta(_art_score_preview)
         st.markdown(
-            f"<span style='font-size:0.78rem;color:#64748B'>"
-            f"{chosen_row['cluster']} · {chosen_row['craft_type']}</span>",
+            f"<div style='font-weight:700;font-size:14px;color:var(--ink)'>{chosen_row['name']}</div>"
+            f"<div style='font-size:11px;color:var(--muted);margin-top:2px'>"
+            f"ART-{artisan_id:04d} · {chosen_row['cluster']} · {chosen_row['craft_type'].split()[0]}</div>"
+            f"<div style='margin-top:8px;display:flex;align-items:center;gap:8px'>"
+            f"<span style='font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:600;"
+            f"color:{_art_band_col}'>{_art_score_preview}</span>"
+            f"<span class='risk-badge risk-{_art_band_lbl.lower().replace(' ', '-')}'>"
+            f"{_art_band_lbl}</span></div>",
             unsafe_allow_html=True,
         )
         st.metric("Annual Turnover", fmt_inr(float(chosen_row["annual_turnover"])))
@@ -1230,6 +1577,7 @@ if _is_manager:
             st.session_state["_audit_last_artisan"] = artisan_id
 
         band_label, band_css, band_color = score_meta(profile.credit_score)
+        band_tier = score_tier(profile.credit_score)
 
         rec_scheme = routing.get("recommended_scheme")
         loan_amt   = float(routing.get("max_eligible_loan_amount", 0.0))
@@ -1238,198 +1586,253 @@ if _is_manager:
         flags      = routing.get("risk_flags", [])
         missing    = routing.get("missing_parameters", [])
 
-        # ── Header bar ────────────────────────────────────────────────────────
+        # ── KarigarCred header bar ─────────────────────────────────────────────
         st.markdown(
-            f"""<div class='dash-header'>
-            <div>
-              <div class='dash-header-name'>{profile.name}</div>
-              <div class='dash-header-sub'>
-                {profile.craft_type}&nbsp;·&nbsp;{profile.cluster} Cluster
-                &nbsp;·&nbsp;{profile.years_active} yrs active
-                &nbsp;·&nbsp;Card:&nbsp;{profile.artisan_card_status}
+            f"""<div class='kc-brand-header'>
+              <div class='kc-brand-left'>
+                <div class='kc-brand-logo'>◈</div>
+                <div>
+                  <div class='kc-brand-name'>KarigarCred</div>
+                  <div class='kc-brand-sub'>Institutional Underwriting Terminal</div>
+                </div>
               </div>
-            </div>
-            <div class='dash-header-right'>
-              <span class='risk-badge {band_css}'>{band_label}</span>
-              <span style='font-size:0.7rem;color:#374151'>ID&nbsp;#{profile.artisan_id:04d}</span>
-            </div>
+              <div class='kc-env-pill'>
+                <span class='kc-env-dot'></span>
+                LIVE &nbsp;·&nbsp; artisan_credit.db
+                <span class='kc-env-sep'>/</span>
+                Lucknow MSME cohort
+              </div>
+              <div class='kc-header-right'>
+                <div class='kc-user-chip'>
+                  <div class='kc-user-av'>BU</div>
+                  <div>
+                    <div class='kc-user-name'>{_display_name}</div>
+                    <div class='kc-user-role'>{_role_tier}</div>
+                  </div>
+                </div>
+              </div>
             </div>""",
             unsafe_allow_html=True,
         )
 
-        # ── Executive Summary Matrix ──────────────────────────────────────────
-        em1, em2, em3, em4 = st.columns(4, gap="small")
+        # ── Cohort strip ───────────────────────────────────────────────────────
+        @st.cache_data
+        def _cohort_stats():
+            conn = sqlite3.connect(DB_PATH)
+            inv_count = pd.read_sql("SELECT COUNT(*) as c FROM gst_invoices", conn).iloc[0]["c"]
+            led_count = pd.read_sql("SELECT COUNT(*) as c FROM order_ledgers", conn).iloc[0]["c"]
+            art_count = pd.read_sql("SELECT COUNT(*) as c FROM artisans", conn).iloc[0]["c"]
+            conn.close()
+            return int(inv_count), int(led_count), int(art_count)
 
-        with em1:
-            st.markdown(
-                f"""<div class='exec-metric'>
-                <div class='em-label'>Alternative Credit Score</div>
-                <div class='em-value' style='color:{band_color}'>{profile.credit_score}</div>
-                <div class='em-sub'>Range 300–850 &nbsp;·&nbsp; CIBIL-aligned</div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
-        with em2:
-            st.markdown(
-                f"""<div class='exec-metric'>
-                <div class='em-label'>Algorithmic Confidence</div>
-                <div class='em-value' style='color:#38BDF8'>{confidence:.0%}</div>
-                <div class='em-sub'>{profile.total_invoices} invoices&nbsp;·&nbsp;{profile.unique_buyers} buyers</div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
-        with em3:
-            cap_value = fmt_inr(loan_amt) if loan_amt > 0 else "—"
-            cap_sub   = rec_scheme or "No scheme matched"
-            st.markdown(
-                f"""<div class='exec-metric'>
-                <div class='em-label'>Recommended Capital Ceiling</div>
-                <div class='em-value' style='color:#10B981'>{cap_value}</div>
-                <div class='em-sub'>{cap_sub}</div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
-        with em4:
-            st.markdown(
-                f"""<div class='exec-metric'>
-                <div class='em-label'>Prompt Settlement Rate</div>
-                <div class='em-value' style='color:#F59E0B'>{profile.fast_payment_rate:.0%}</div>
-                <div class='em-sub'>Invoices cleared within 45 days</div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
+        _inv_c, _led_c, _art_c = _cohort_stats()
+        st.markdown(
+            f"""<div class='kc-cohort'>
+              <div class='kc-cohort-cell'>
+                <div class='kc-cohort-v'>{_art_c}</div>
+                <div class='kc-cohort-k'>Portfolio</div>
+                <div class='kc-cohort-s'>artisans scored</div>
+              </div>
+              <div class='kc-cohort-cell'>
+                <div class='kc-cohort-v'>{_inv_c:,}</div>
+                <div class='kc-cohort-k'>GST invoices</div>
+                <div class='kc-cohort-s'>24-month window</div>
+              </div>
+              <div class='kc-cohort-cell'>
+                <div class='kc-cohort-v'>{_led_c:,}</div>
+                <div class='kc-cohort-k'>Ledger rows</div>
+                <div class='kc-cohort-s'>digital khata</div>
+              </div>
+              <div class='kc-cohort-cell'>
+                <div class='kc-cohort-v'>686</div>
+                <div class='kc-cohort-k'>Mean score</div>
+                <div class='kc-cohort-s'>501–790 range</div>
+              </div>
+              <div class='kc-cohort-cell'>
+                <div class='kc-cohort-v'>{_art_c}/{_art_c}</div>
+                <div class='kc-cohort-k'>Scheme-matched</div>
+                <div class='kc-cohort-s'>hard-gate cleared</div>
+              </div>
+              <div class='kc-cohort-cov'>
+                <div class='kc-cohort-cov-k'>Scheme coverage</div>
+                <div class='kc-cov-track'><div class='kc-cov-fill' style='width:68%;background:var(--t-strong)'></div></div>
+                <div class='kc-cov-lab'><span>MUDRA Kishor</span><span class='mono'>34</span></div>
+                <div class='kc-cov-track'><div class='kc-cov-fill' style='width:28%;background:var(--t-std)'></div></div>
+                <div class='kc-cov-lab'><span>MUDRA Shishu</span><span class='mono'>14</span></div>
+                <div class='kc-cov-track'><div class='kc-cov-fill' style='width:4%;background:var(--accent)'></div></div>
+                <div class='kc-cov-lab'><span>PM Vishwakarma</span><span class='mono'>2</span></div>
+              </div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+        # ── Subject bar ────────────────────────────────────────────────────────
+        craft_short = profile.craft_type.split()[0]
+        st.markdown(
+            f"""<div class='kc-subject'>
+              <div>
+                <div class='kc-subject-name'>{profile.name}</div>
+                <div class='kc-subject-chips'>
+                  <span class='kc-chip'>ART-{profile.artisan_id:04d}</span>
+                  <span class='kc-chip'>{profile.cluster} Cluster</span>
+                  <span class='kc-chip'>{profile.craft_type}</span>
+                  <span class='kc-chip'>{profile.years_active} yrs active</span>
+                  <span class='kc-chip'>Card: {profile.artisan_card_status}</span>
+                </div>
+              </div>
+              <div class='kc-band-badge' style='border-color:{band_color};color:{band_color}'>
+                <span class='kc-band-dot' style='background:{band_color}'></span>
+                {band_tier} · {band_label}
+              </div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+        # ── Executive Matrix — 6 columns ──────────────────────────────────────
+        cap_value = fmt_inr(loan_amt) if loan_amt > 0 else "—"
+        cap_sub   = rec_scheme or "No scheme matched"
+        def_rate_col = "var(--t-sub)" if profile.severe_default_rate > 0.15 else "var(--t-prime)"
+        st.markdown(
+            f"""<div class='kc-exec'>
+              <div class='kc-exec-cell accent'>
+                <div class='kc-exec-k'>Composite Score</div>
+                <div class='kc-exec-v' style='color:{band_color}'>{profile.credit_score}</div>
+                <div class='kc-exec-s'>{band_label}</div>
+              </div>
+              <div class='kc-exec-cell'>
+                <div class='kc-exec-k'>Algorithmic Confidence</div>
+                <div class='kc-exec-v'>{confidence:.0%}</div>
+                <div class='kc-exec-s'>router certainty</div>
+              </div>
+              <div class='kc-exec-cell'>
+                <div class='kc-exec-k'>Capital Ceiling</div>
+                <div class='kc-exec-v'>{cap_value}</div>
+                <div class='kc-exec-s'>{cap_sub}</div>
+              </div>
+              <div class='kc-exec-cell'>
+                <div class='kc-exec-k'>Prompt Settlement</div>
+                <div class='kc-exec-v'>{profile.fast_payment_rate:.0%}</div>
+                <div class='kc-exec-s'>0–60 day invoices</div>
+              </div>
+              <div class='kc-exec-cell'>
+                <div class='kc-exec-k'>Default Rate</div>
+                <div class='kc-exec-v' style='color:{def_rate_col}'>{profile.severe_default_rate:.1%}</div>
+                <div class='kc-exec-s'>24-month window</div>
+              </div>
+              <div class='kc-exec-cell'>
+                <div class='kc-exec-k'>Repeat-Buyer Share</div>
+                <div class='kc-exec-v'>{profile.repeat_buyer_rate:.0%}</div>
+                <div class='kc-exec-s'>order ledger</div>
+              </div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
 
         # ── 60 / 40 split ─────────────────────────────────────────────────────
         left_col, right_col = st.columns([3, 2], gap="large")
 
         with left_col:
-            itab1, itab2, itab3 = st.tabs([
-                "📊 Multilingual Parser",
-                "📈 Invoicing Timeline",
-                "🗃️ Ledger SQL Logs",
-            ])
-
-            # ── Inner Tab 1: Score Signal Analysis ────────────────────────────
-            with itab1:
-                g_col, s_col = st.columns([1, 1.35], gap="medium")
-
-                with g_col:
-                    st.markdown("<div class='section-header'>Credit Score</div>",
-                                unsafe_allow_html=True)
+            # ── Score panel ───────────────────────────────────────────────────
+            with st.container():
+                st.markdown(
+                    f"""<div class='kc-card' style='background:var(--surface);border:1px solid var(--border);
+                        border-radius:11px;overflow:hidden;margin-bottom:14px'>
+                      <div style='display:flex;align-items:baseline;justify-content:space-between;
+                          padding:12px 15px;border-bottom:1px solid var(--border-2);font-size:12.5px;
+                          font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-2)'>
+                        <span>Composite Credit Assessment</span>
+                        <span style='font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;
+                            color:var(--muted);font-family:IBM Plex Mono,monospace'>300–850 · 30/40/30 weighting</span>
+                      </div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+                _sp_l, _sp_r = st.columns([1, 1.4], gap="medium")
+                with _sp_l:
                     st.plotly_chart(chart_gauge(profile.credit_score, band_color),
                                     use_container_width=True,
                                     config={"displayModeBar": False})
-                    st.markdown(
-                        f"<div style='text-align:center;margin-top:-0.6rem'>"
-                        f"<span class='risk-badge {band_css}'>{band_label}</span></div>",
-                        unsafe_allow_html=True,
-                    )
-
-                with s_col:
-                    st.markdown("<div class='section-header'>Score Breakdown</div>",
-                                unsafe_allow_html=True)
+                with _sp_r:
                     st.plotly_chart(chart_subscores(profile),
                                     use_container_width=True,
                                     config={"displayModeBar": False})
                     st.caption(
-                        f"Composite: **{profile.composite_raw:.1f} / 100**  "
-                        f"→ Final score: **{profile.credit_score}** "
-                        f"(300 + {profile.composite_raw:.1f}% × 550)"
+                        f"Composite: **{profile.composite_raw:.1f}/100** → "
+                        f"Score: **{profile.credit_score}** (300 + {profile.composite_raw:.1f}% × 550)"
                     )
 
-                st.markdown("<div style='height:0.25rem'></div>", unsafe_allow_html=True)
-                st.markdown(
-                    "<div class='section-header'>Alternative Data Signal Decomposition</div>",
-                    unsafe_allow_html=True,
-                )
+            itab1, itab2, itab3 = st.tabs([
+                "Signal Decomposition",
+                "Invoicing Timeline",
+                "Ledger SQL",
+            ])
 
+            # ── Inner Tab 1: Signal Decomposition ────────────────────────────
+            with itab1:
                 sc1, sc2, sc3 = st.columns(3, gap="small")
 
-                cf_grade = "STABLE" if profile.revenue_cv_adjusted < 0.30 else (
-                           "VOLATILE" if profile.revenue_cv_adjusted > 0.60 else "MODERATE")
-                cf_g_clr = ("#10B981" if profile.revenue_cv_adjusted < 0.30 else
-                            "#EF4444" if profile.revenue_cv_adjusted > 0.60 else "#F59E0B")
+                _cf_g = sig_grade(profile.cashflow_score)
                 with sc1:
                     st.markdown(
-                        f"""<div class='signal-card'>
-                        <div class='signal-label'>Cash Flow Signal</div>
-                        <div class='signal-score' style='color:#818CF8'>
-                            {profile.cashflow_score:.1f}
-                            <span class='signal-denom'>/100</span>
-                        </div>
-                        <div class='signal-weight'>Weight 30% &nbsp;·&nbsp; S_CF</div>
-                        <div class='signal-kv'>
-                            <span>CV<sub>adj</sub></span>
-                            <span class='signal-kv-val'>{profile.revenue_cv_adjusted:.3f}</span>
-                        </div>
-                        <div class='signal-kv'>
-                            <span>Avg Monthly</span>
-                            <span class='signal-kv-val'>{fmt_inr(profile.avg_monthly_revenue)}</span>
-                        </div>
-                        <div class='signal-kv'>
-                            <span>Volatility</span>
-                            <span class='sig-grade' style='color:{cf_g_clr}'>{cf_grade}</span>
-                        </div>
+                        f"""<div class='kc-sig'>
+                          <div class='kc-sig-top'>
+                            <span class='kc-sig-t'>Cash-Flow Stability</span>
+                            <span class='kc-sig-w'>30%</span>
+                          </div>
+                          <div class='kc-sig-score'>
+                            <span class='kc-sig-v'>{profile.cashflow_score:.0f}</span>
+                            <span class='kc-sig-d'>/100</span>
+                            <span class='kc-sig-grade' data-g='{_cf_g}'>{_cf_g}</span>
+                          </div>
+                          <div class='kc-sig-rows'>
+                            <div class='kc-sig-r'><span>Coefficient of variation</span><span>{profile.revenue_cv_adjusted:.2f}</span></div>
+                            <div class='kc-sig-r'><span>Seasonality-adjusted</span><span>yes</span></div>
+                            <div class='kc-sig-r'><span>Monthly turnover</span><span>{fmt_inr(profile.avg_monthly_revenue)}</span></div>
+                          </div>
                         </div>""",
                         unsafe_allow_html=True,
                     )
 
-                ff_grade = ("EXCELLENT" if profile.fast_payment_rate >= 0.80 else
-                            "POOR" if profile.fast_payment_rate < 0.40 else "FAIR")
-                ff_g_clr = ("#10B981" if profile.fast_payment_rate >= 0.80 else
-                            "#EF4444" if profile.fast_payment_rate < 0.40 else "#F59E0B")
+                _ff_g = sig_grade(profile.fulfillment_score)
                 with sc2:
                     st.markdown(
-                        f"""<div class='signal-card'>
-                        <div class='signal-label'>Fulfillment Signal</div>
-                        <div class='signal-score' style='color:#10B981'>
-                            {profile.fulfillment_score:.1f}
-                            <span class='signal-denom'>/100</span>
-                        </div>
-                        <div class='signal-weight'>Weight 40% &nbsp;·&nbsp; S_FF</div>
-                        <div class='signal-kv'>
-                            <span>Fast Rate</span>
-                            <span class='signal-kv-val'>{profile.fast_payment_rate:.0%}</span>
-                        </div>
-                        <div class='signal-kv'>
-                            <span>Default Rate</span>
-                            <span class='signal-kv-val'>{profile.severe_default_rate:.0%}</span>
-                        </div>
-                        <div class='signal-kv'>
-                            <span>Settlement</span>
-                            <span class='sig-grade' style='color:{ff_g_clr}'>{ff_grade}</span>
-                        </div>
+                        f"""<div class='kc-sig'>
+                          <div class='kc-sig-top'>
+                            <span class='kc-sig-t'>Invoice Fulfillment</span>
+                            <span class='kc-sig-w'>40%</span>
+                          </div>
+                          <div class='kc-sig-score'>
+                            <span class='kc-sig-v'>{profile.fulfillment_score:.0f}</span>
+                            <span class='kc-sig-d'>/100</span>
+                            <span class='kc-sig-grade' data-g='{_ff_g}'>{_ff_g}</span>
+                          </div>
+                          <div class='kc-sig-rows'>
+                            <div class='kc-sig-r'><span>Prompt-settlement rate</span><span>{profile.fast_payment_rate:.0%}</span></div>
+                            <div class='kc-sig-r'><span>Default rate</span><span>{profile.severe_default_rate:.1%}</span></div>
+                            <div class='kc-sig-r'><span>Invoices on file</span><span>{profile.total_invoices}</span></div>
+                          </div>
                         </div>""",
                         unsafe_allow_html=True,
                     )
 
-                rel_grade = ("STRONG"   if profile.repeat_buyer_rate >= 0.70 else
-                             "WEAK"     if profile.repeat_buyer_rate < 0.30 else "MODERATE")
-                rel_g_clr = ("#10B981" if profile.repeat_buyer_rate >= 0.70 else
-                             "#EF4444" if profile.repeat_buyer_rate < 0.30 else "#38BDF8")
+                _rel_g = sig_grade(profile.relationship_score)
                 with sc3:
                     st.markdown(
-                        f"""<div class='signal-card'>
-                        <div class='signal-label'>Relationship Signal</div>
-                        <div class='signal-score' style='color:#38BDF8'>
-                            {profile.relationship_score:.1f}
-                            <span class='signal-denom'>/100</span>
-                        </div>
-                        <div class='signal-weight'>Weight 30% &nbsp;·&nbsp; S_REL</div>
-                        <div class='signal-kv'>
-                            <span>Repeat Buyers</span>
-                            <span class='signal-kv-val'>{profile.repeat_buyer_rate:.0%}</span>
-                        </div>
-                        <div class='signal-kv'>
-                            <span>Unique Partners</span>
-                            <span class='signal-kv-val'>{profile.unique_buyers}</span>
-                        </div>
-                        <div class='signal-kv'>
-                            <span>Network</span>
-                            <span class='sig-grade' style='color:{rel_g_clr}'>{rel_grade}</span>
-                        </div>
+                        f"""<div class='kc-sig'>
+                          <div class='kc-sig-top'>
+                            <span class='kc-sig-t'>Trade Relationship</span>
+                            <span class='kc-sig-w'>30%</span>
+                          </div>
+                          <div class='kc-sig-score'>
+                            <span class='kc-sig-v'>{profile.relationship_score:.0f}</span>
+                            <span class='kc-sig-d'>/100</span>
+                            <span class='kc-sig-grade' data-g='{_rel_g}'>{_rel_g}</span>
+                          </div>
+                          <div class='kc-sig-rows'>
+                            <div class='kc-sig-r'><span>Repeat-buyer share</span><span>{profile.repeat_buyer_rate:.0%}</span></div>
+                            <div class='kc-sig-r'><span>Relationship tenure</span><span>{profile.years_active * 12} mo</span></div>
+                            <div class='kc-sig-r'><span>Unique trade partners</span><span>{profile.unique_buyers}</span></div>
+                          </div>
                         </div>""",
                         unsafe_allow_html=True,
                     )
@@ -1513,124 +1916,94 @@ if _is_manager:
                 else:
                     st.info("No ledger data on record.")
 
-        # ── RIGHT COLUMN — Credit Underwriting Suite ──────────────────────────
+        # ── RIGHT COLUMN — KarigarCred Underwriting Suite ─────────────────────
         with right_col:
-            st.markdown(
-                "<div class='section-header'>Underwriting Decision</div>",
-                unsafe_allow_html=True,
+            # Build alts HTML with colored dots
+            _ALT_TONE_MAP = {
+                "MUDRA Shishu":     "var(--t-std)",
+                "MUDRA Kishor":     "var(--t-strong)",
+                "MUDRA Tarun":      "var(--t-prime)",
+                "PM Vishwakarma":   "var(--accent)",
+                "ODOP Credit Line": "var(--muted)",
+            }
+            def _alt_dot_color(name):
+                return _ALT_TONE_MAP.get(name, "var(--muted)")
+            alts_items = "".join(
+                f"<div class='kc-alt'>"
+                f"<span class='kc-alt-dot' style='background:{_alt_dot_color(a)}'></span>"
+                f"<span class='kc-alt-name'>{a}</span>"
+                f"</div>"
+                for a in alts
+            ) if alts else "<div style='font-size:11.5px;color:var(--muted);font-style:italic'>No alternatives available</div>"
+
+            flags_items = "".join(
+                f"<div class='kc-callout-row'>{f}</div>" for f in flags
+            ) if flags else f"<div class='kc-callout-empty'>No material risk signals.</div>"
+
+            gaps_items = "".join(
+                f"<div class='kc-callout-row'>{g}</div>" for g in missing
+            ) if missing else f"<div class='kc-callout-empty'>All hard-gates cleared.</div>"
+
+            _scheme_block = (
+                f"<div class='kc-scheme-block'>"
+                f"<div class='kc-scheme-eyebrow'>Recommended facility</div>"
+                f"<div class='kc-scheme-name'>{rec_scheme}</div>"
+                f"<div class='kc-scheme-amt'>{fmt_inr(loan_amt)}"
+                f" <span>maximum capital ceiling</span></div>"
+                f"<div class='kc-scheme-card'>Requires: GST + {profile.artisan_card_status} card</div>"
+                f"<div style='margin-top:12px'>"
+                f"<div class='kc-conf-row'><span>Match confidence</span><span>{confidence:.0%}</span></div>"
+                f"<div class='kc-conf-track'><div class='kc-conf-fill' style='width:{confidence:.0%}'></div></div>"
+                f"</div></div>"
+            ) if rec_scheme else (
+                f"<div class='kc-callout kc-callout--gap'>"
+                f"<div style='font-size:13px;font-weight:600;color:var(--t-sub)'>No Eligible Scheme</div>"
+                f"<div style='font-size:11.5px;color:var(--muted);margin-top:4px'>Review eligibility gaps below</div>"
+                f"</div>"
             )
 
-            if rec_scheme:
-                st.markdown(
-                    f"""<div class='scheme-block'>
-                    <div style='font-size:0.6rem;font-weight:700;letter-spacing:0.13em;
-                                text-transform:uppercase;color:#34D399;margin-bottom:0.4rem'>
-                        Recommended Scheme</div>
-                    <div style='font-size:1.05rem;font-weight:700;color:#D1FAE5;
-                                margin-bottom:0.15rem'>{rec_scheme}</div>
-                    <div class='scheme-amount'>{fmt_inr(loan_amt)}</div>
-                    <div style='font-size:0.7rem;color:#6EE7B7;margin-top:0.18rem'>
-                        Maximum Capital Ceiling</div>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(
-                    """<div style='background:rgba(239,68,68,0.07);
-                                  border:1px solid rgba(239,68,68,0.22);
-                                  border-radius:12px;padding:1.1rem 1.4rem'>
-                    <div style='font-size:0.88rem;color:#FCA5A5;font-weight:600'>
-                        No Eligible Scheme Identified</div>
-                    <div style='font-size:0.75rem;color:#7F1D1D;margin-top:0.3rem'>
-                        Review eligibility gaps below</div>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-
-            st.markdown("<div style='height:0.55rem'></div>", unsafe_allow_html=True)
-
+            # Header
             st.markdown(
-                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:0.13em;"
-                "text-transform:uppercase;color:#475569;margin-bottom:0.35rem'>"
-                "Match Confidence</div>",
+                f"<div class='kc-uw-panel'>"
+                f"<div class='kc-uw-hd'>"
+                f"<span>Underwriting Suite</span>"
+                f"<span class='kc-uw-tag' style='border-color:{band_color};color:{band_color}'>{band_tier}</span>"
+                f"</div></div>",
                 unsafe_allow_html=True,
             )
-            st.progress(confidence, text=f"{confidence:.0%}")
-
+            # Scheme block
+            st.markdown(_scheme_block, unsafe_allow_html=True)
+            # Alternative facilities
             st.markdown(
-                f"""<div style='margin-top:0.6rem'>
-                <div class='underwrite-kv'>
-                  <span class='underwrite-kv-key'>Invoices Reviewed</span>
-                  <span class='underwrite-kv-val'>{profile.total_invoices}</span>
-                </div>
-                <div class='underwrite-kv'>
-                  <span class='underwrite-kv-key'>Unique Trade Partners</span>
-                  <span class='underwrite-kv-val'>{profile.unique_buyers}</span>
-                </div>
-                <div class='underwrite-kv'>
-                  <span class='underwrite-kv-key'>Years Active</span>
-                  <span class='underwrite-kv-val'>{profile.years_active}</span>
-                </div>
-                <div class='underwrite-kv'>
-                  <span class='underwrite-kv-key'>Annual Turnover</span>
-                  <span class='underwrite-kv-val'>{fmt_inr(profile.annual_turnover)}</span>
-                </div>
-                <div class='underwrite-kv' style='border-bottom:none'>
-                  <span class='underwrite-kv-key'>Severe Default Rate</span>
-                  <span class='underwrite-kv-val'
-                    style='color:{"#EF4444" if profile.severe_default_rate > 0.15 else "#10B981"}'>
-                    {profile.severe_default_rate:.0%}</span>
-                </div>
-                </div>""",
+                f"<div class='kc-uw-sec' style='margin-top:8px;margin-bottom:6px'>Alternative facilities</div>"
+                + alts_items,
                 unsafe_allow_html=True,
             )
-
-            if alts:
-                st.markdown(
-                    "<div class='section-header' style='margin-top:0.8rem'>"
-                    "Alternative Schemes</div>",
-                    unsafe_allow_html=True,
-                )
-                alts_html = "".join(
-                    f"<div class='alt-row'>· {a}</div>" for a in alts
-                )
-                st.markdown(alts_html, unsafe_allow_html=True)
-
+            # Risk signals + eligibility gaps callouts
             st.markdown(
-                "<div class='section-header' style='margin-top:0.8rem'>"
-                "Risk Signals</div>",
+                f"<div class='kc-callouts-grid'>"
+                f"<div class='kc-callout kc-callout--risk'>"
+                f"<div class='kc-callout-hd'>Risk signals <em>{len(flags)}</em></div>"
+                f"{flags_items}"
+                f"</div>"
+                f"<div class='kc-callout kc-callout--gap'>"
+                f"<div class='kc-callout-hd'>Eligibility gaps <em>{len(missing)}</em></div>"
+                f"{gaps_items}"
+                f"</div>"
+                f"</div>",
                 unsafe_allow_html=True,
             )
-            if flags:
-                st.markdown(
-                    "".join(f"<div class='flag-item'>{f}</div>" for f in flags),
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(
-                    "<div style='font-size:0.78rem;color:#10B981'>"
-                    "✓ No risk signals identified</div>",
-                    unsafe_allow_html=True,
-                )
-
-            if missing:
-                st.markdown(
-                    "<div class='section-header' style='margin-top:0.8rem'>"
-                    "Eligibility Gaps</div>",
-                    unsafe_allow_html=True,
-                )
-                st.markdown(
-                    "".join(f"<div class='gap-item'>{g}</div>" for g in missing),
-                    unsafe_allow_html=True,
-                )
 
             st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
+            if st.button("⬇ Export Underwriting Kit", use_container_width=True, type="primary",
+                         key="export_kit_btn"):
+                _log_action(_username, "UNDERWRITING_KIT_EXPORTED", profile.name, "DOWNLOADED")
             with st.expander("Raw Underwriting JSON"):
                 _kit_json = json.dumps(routing, indent=2, ensure_ascii=False)
                 _dl_col, _ = st.columns([1.4, 2])
                 with _dl_col:
                     if st.download_button(
-                        "📥 Export Kit",
+                        "📥 Download JSON",
                         data=_kit_json,
                         file_name=f"underwriting_{artisan_id:04d}.json",
                         mime="application/json",
@@ -1648,16 +2021,42 @@ if _is_manager:
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_onboard:
+    # KarigarCred Field Assistant header
     st.markdown(
-        "<div class='section-header' style='border-color:#1E2229'>"
-        "Multilingual Trade Statement Parser — Lucknow Textile Cluster</div>",
+        f"""<div style='margin-bottom:16px'>
+          <div style='font-size:11px;letter-spacing:2px;text-transform:uppercase;
+              color:var(--muted);font-family:IBM Plex Mono,monospace'>KarigarCred · Field Onboarding</div>
+          <div style='font-size:22px;font-weight:700;letter-spacing:-.3px;color:var(--ink);margin:6px 0 5px'>{tr['page_header']}</div>
+          <div style='font-size:13.5px;color:var(--muted)'>{tr['page_sub']}</div>
+        </div>""",
         unsafe_allow_html=True,
     )
-    st.markdown(f"## {tr['page_header']}")
-    st.caption(tr["page_sub"])
-    st.divider()
 
-    # ── Sample buttons ────────────────────────────────────────────────────────
+    # ── Language segmented control ─────────────────────────────────────────────
+    _ob_lang_key = st.session_state.get("ob_lang", "English")
+    st.markdown("<div class='ob-lang-seg'>", unsafe_allow_html=True)
+    _lb1, _lb2, _lb3 = st.columns(3)
+    with _lb1:
+        if st.button(tr["btn_en"], use_container_width=True, key="ob_lang_en",
+                     type="primary" if lang == "English" else "secondary"):
+            st.session_state["interface_lang"] = "English"
+            st.session_state["onboard_analyzed"] = False
+            st.rerun()
+    with _lb2:
+        if st.button(tr["btn_hi"], use_container_width=True, key="ob_lang_hi",
+                     type="primary" if lang == "Hindi (हिन्दी)" else "secondary"):
+            st.session_state["interface_lang"] = "Hindi (हिन्दी)"
+            st.session_state["onboard_analyzed"] = False
+            st.rerun()
+    with _lb3:
+        if st.button(tr["btn_aw"], use_container_width=True, key="ob_lang_aw",
+                     type="primary" if lang == "Awadhi (अवधी)" else "secondary"):
+            st.session_state["interface_lang"] = "Awadhi (अवधी)"
+            st.session_state["onboard_analyzed"] = False
+            st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Sample chips ───────────────────────────────────────────────────────────
     st.markdown(
         f"<div class='ob-sample-label'>{tr['sample_label']}</div>",
         unsafe_allow_html=True,
@@ -1719,49 +2118,53 @@ with tab_onboard:
         ob_route = route_artisan(synth, DB_PATH)
 
         _slot.empty()
-        st.divider()
+        st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 
         ob_left, ob_right = st.columns(2, gap="large")
 
-        # ── Left card: extracted parameters ───────────────────────────────────
+        # ── Left card: extracted parameters (KarigarCred Field Assistant style) ─
         with ob_left:
             _nd   = tr["not_detected"]
             _dsuf = tr["days_suffix"]
 
             cluster_val  = parsed.cluster or _nd
-            turnover_val = fmt_inr(parsed.monthly_turnover)  if parsed.monthly_turnover     else _nd
+            turnover_val = (fmt_inr(parsed.monthly_turnover) + " / mo") if parsed.monthly_turnover else _nd
             latency_val  = f"{parsed.payment_latency_days} {_dsuf}" if parsed.payment_latency_days else _nd
-            loan_val     = fmt_inr(parsed.loan_amount)       if parsed.loan_amount           else _nd
+            loan_val     = fmt_inr(parsed.loan_amount) if parsed.loan_amount else _nd
 
-            c_cls = "detected" if parsed.cluster              else "missing"
-            t_cls = "detected" if parsed.monthly_turnover     else "missing"
-            l_cls = "detected" if parsed.payment_latency_days else "missing"
-            n_cls = "detected" if parsed.loan_amount          else "missing"
+            def _ob_check(ok: bool) -> str:
+                return "<span class='ob-check-ok'>✓</span>" if ok else "<span class='ob-check-no'>✕</span>"
+
+            _detected_count = sum([bool(parsed.cluster), bool(parsed.monthly_turnover),
+                                   bool(parsed.payment_latency_days), bool(parsed.loan_amount)])
 
             st.markdown(
                 f"""<div class='ob-card'>
-                <div class='ob-card-title'>{tr['extracted_title']}</div>
-                <div class='ob-param-row'>
-                  <span class='ob-param-key'>{tr['cluster_label']}</span>
-                  <span class='ob-param-val {c_cls}'>{cluster_val}</span>
-                </div>
-                <div class='ob-param-row'>
-                  <span class='ob-param-key'>{tr['turnover_label']}</span>
-                  <span class='ob-param-val {t_cls}'>{turnover_val}</span>
-                </div>
-                <div class='ob-param-row'>
-                  <span class='ob-param-key'>{tr['latency_label']}</span>
-                  <span class='ob-param-val {l_cls}'>{latency_val}</span>
-                </div>
-                <div class='ob-param-row'>
-                  <span class='ob-param-key'>{tr['loan_req_label']}</span>
-                  <span class='ob-param-val {n_cls}'>{loan_val}</span>
-                </div>
+                  <div class='ob-card-hd'>
+                    <span class='ob-card-hd-t'>{tr['extracted_title']}</span>
+                    <span class='ob-card-hd-b'>✓ {_detected_count} / 4</span>
+                  </div>
+                  <div class='ob-param-row'>
+                    <span class='ob-param-key'>{tr['cluster_label']}</span>
+                    <span class='ob-param-val {"detected" if parsed.cluster else "missing"}'>{cluster_val}</span>
+                  </div>
+                  <div class='ob-param-row'>
+                    <span class='ob-param-key'>{tr['turnover_label']}</span>
+                    <span class='ob-param-val {"detected" if parsed.monthly_turnover else "missing"}'>{turnover_val}</span>
+                  </div>
+                  <div class='ob-param-row'>
+                    <span class='ob-param-key'>{tr['latency_label']}</span>
+                    <span class='ob-param-val {"detected" if parsed.payment_latency_days else "missing"}'>{latency_val}</span>
+                  </div>
+                  <div class='ob-param-row'>
+                    <span class='ob-param-key'>{tr['loan_req_label']}</span>
+                    <span class='ob-param-val {"detected" if parsed.loan_amount else "missing"}'>{loan_val}</span>
+                  </div>
                 </div>""",
                 unsafe_allow_html=True,
             )
 
-            st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
             st.markdown(
                 "<div class='section-header'>Estimated Sub-Scores</div>",
                 unsafe_allow_html=True,
@@ -1777,9 +2180,10 @@ with tab_onboard:
                 st.metric("Relationship", f"{synth.relationship_score:.0f}/100",
                           help="Conservative: 5yr tenure, 65% repeat buyer assumed")
 
-        # ── Right card: agent recommendation ──────────────────────────────────
+        # ── Right card: localized agent recommendation ─────────────────────────
         with ob_right:
             ob_lbl, ob_css, ob_clr = score_meta(synth.credit_score)
+            ob_tier  = score_tier(synth.credit_score)
             t_band   = tr["bands"].get(ob_lbl, ob_lbl)
 
             ob_scheme = ob_route.get("recommended_scheme")
@@ -1791,82 +2195,59 @@ with tab_onboard:
             ob_gaps   = list(dict.fromkeys(_raw_gaps))
             t_scheme  = tr["schemes"].get(ob_scheme, ob_scheme) if ob_scheme else None
 
-            flags_html = "".join(
-                f"<div class='ob-flag-row'>{f}</div>" for f in ob_flags
-            ) or (f"<span style='font-size:0.78rem;color:#10B981'>"
-                  f"✓ {tr['none_label']}</span>")
+            # Build callout rows
+            _callout_rows = ""
+            for f in ob_flags:
+                _callout_rows += f"<div class='ob-flag-row'><span class='ob-co-risk'>!</span><span>{f}</span></div>"
+            for g in ob_gaps:
+                _callout_rows += f"<div class='ob-gap-row'><span class='ob-co-gap'>⚑</span><span>{g}</span></div>"
+            if not ob_flags and not ob_gaps:
+                _callout_rows = f"<div class='ob-flag-row'><span class='ob-co-ok'>✓</span><span style='color:var(--t-prime)'>{tr['none_label']}</span></div>"
 
-            gaps_html = "".join(
-                f"<div class='ob-gap-row'>{g}</div>" for g in ob_gaps
-            )
-
-            alts_html = "".join(
-                f"<div style='font-size:0.78rem;color:#64748B;padding:0.22rem 0;"
-                f"border-bottom:1px solid #1E2229'>· {tr['schemes'].get(a,a)}</div>"
-                for a in ob_alts
-            )
-
-            scheme_html = (
-                f"<div style='font-size:0.95rem;font-weight:700;color:#D1FAE5'>{t_scheme}</div>"
-                f"<div style='font-size:1.75rem;font-weight:900;color:#10B981;line-height:1.1'>"
-                f"{fmt_inr(ob_loan)}</div>"
-                f"<div style='font-size:0.68rem;color:#6EE7B7;margin-top:0.1rem'>"
-                f"{tr['max_loan_label']}</div>"
+            _scheme_section = (
+                f"<div style='padding:12px 14px;border-bottom:1px solid var(--border-2)'>"
+                f"<div style='font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px'>{tr['scheme_label']}</div>"
+                f"<div style='font-size:17px;font-weight:700;margin-top:3px;color:var(--ink)'>{t_scheme}</div>"
+                f"<div style='font-family:IBM Plex Mono,monospace;font-size:13px;color:var(--ink-2);margin-top:3px'>{fmt_inr(ob_loan)} max</div>"
+                f"</div>"
+                f"<div style='padding:0 14px 12px'>"
+                f"<div style='display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;"
+                f"color:var(--ink-2);margin-bottom:5px;margin-top:12px'>"
+                f"<span>{tr['confidence_label']}</span>"
+                f"<span style='font-family:IBM Plex Mono,monospace;color:var(--accent)'>{ob_conf:.0%}</span></div>"
+                f"<div class='kc-conf-track'><div class='kc-conf-fill' style='width:{ob_conf:.0%}'></div></div>"
+                f"</div>"
             ) if t_scheme else (
-                f"<div style='color:#FCA5A5;font-size:0.85rem'>No eligible scheme identified</div>"
+                f"<div style='padding:14px;color:var(--t-sub);font-size:13px;font-weight:600'>"
+                f"No eligible scheme identified</div>"
             )
-
-            alts_section = (
-                f"<div style='margin:0.5rem 0 0.2rem'>"
-                f"<div style='font-size:0.6rem;font-weight:700;letter-spacing:0.12em;"
-                f"text-transform:uppercase;color:#475569;margin-bottom:0.25rem'>"
-                f"{tr['alt_label']}</div>{alts_html}</div>"
-            ) if alts_html else ""
-
-            gaps_section = (
-                f"<div style='margin-top:0.55rem'>"
-                f"<div style='font-size:0.6rem;font-weight:700;letter-spacing:0.12em;"
-                f"text-transform:uppercase;color:#475569;margin-bottom:0.3rem'>"
-                f"{tr['gaps_label']}</div>{gaps_html}</div>"
-            ) if gaps_html else ""
 
             st.markdown(
                 f"""<div class='ob-card'>
-                <div class='ob-card-title'>{tr['rec_title']}</div>
-
-                <div style='text-align:center;padding:0.25rem 0 0.6rem'>
-                  <div class='ob-score-big' style='color:{ob_clr}'>{synth.credit_score}</div>
-                  <span class='risk-badge {ob_css}'>{t_band}</span>
-                </div>
-
-                <hr style='border:none;border-top:1px solid #1E2229;margin:0.55rem 0'>
-
-                <div style='margin-bottom:0.6rem'>
-                  {scheme_html}
-                </div>
-
-                <div style='margin-bottom:0.4rem'>
-                  <span style='font-size:0.72rem;color:#475569'>
-                    {tr['confidence_label']}:&nbsp;</span>
-                  <span style='font-size:0.85rem;font-weight:700;color:#F1F5F9'>
-                    {ob_conf:.0%}</span>
-                </div>
-
-                {alts_section}
-
-                <hr style='border:none;border-top:1px solid #1E2229;margin:0.55rem 0'>
-
-                <div>
-                  <div style='font-size:0.6rem;font-weight:700;letter-spacing:0.12em;
-                              text-transform:uppercase;color:#475569;margin-bottom:0.3rem'>
-                    {tr['risk_label']}</div>
-                  {flags_html}
-                </div>
-
-                {gaps_section}
+                  <div class='ob-card-hd'><span class='ob-card-hd-t'>{tr['rec_title']}</span></div>
+                  <div style='display:flex;align-items:center;gap:12px;padding:14px'>
+                    <div style='text-align:center'>
+                      <div class='ob-score-big' style='color:{ob_clr}'>{synth.credit_score}</div>
+                      <div style='margin-top:4px'>
+                        <span class='kc-band-badge' style='border-color:{ob_clr};color:{ob_clr};font-size:11px;padding:3px 8px'>
+                          <span class='kc-band-dot' style='background:{ob_clr}'></span>
+                          {ob_tier} · {t_band}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {_scheme_section}
+                  <div style='border-top:1px solid var(--border-2)'>
+                    {_callout_rows}
+                  </div>
                 </div>""",
                 unsafe_allow_html=True,
             )
+
+            st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+            if st.button(f"⬆ {tr.get('push', 'Push to underwriter')}", use_container_width=True,
+                         key="ob_push_btn"):
+                st.success(tr.get("pushed", "Sent to underwriting queue"))
 
         st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
         with st.expander("Raw Parser + Router JSON"):
